@@ -38,7 +38,7 @@ jobs:
           xcodebuild test \
             -project SlowMode.xcodeproj -scheme SlowMode \
             -destination "platform=iOS Simulator,name=$SIM" \
-            | tee test.log | grep -E "error:|warning: |Test Case|\*\* TEST" || true
+            | tee test.log | grep -iE "error:|warning: |test case|\*\* TEST" || true
           grep -q "\*\* TEST SUCCEEDED \*\*" test.log
 
       - name: Compilar para iPhone (sin firmar)
