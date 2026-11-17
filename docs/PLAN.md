@@ -31,7 +31,7 @@ Una fase por sesión (o por petición). Al terminar cada fase: push, CI en verde
 - Sección de presets guardados en Biblioteca.
 
 ## Fase 5 — Comunidad con backend
-- CloudKit (o el backend que se decida), perfiles, seguir, subida de originales, moderación.
+- Backend externo con API HTTP (no CloudKit: exige cuenta de pago; ver `docs/SPEC.md` §7), perfiles, seguir, subida de originales, moderación.
 
 ## Fase 6 — Pulido
 - Accesibilidad (VoiceOver, Dynamic Type, reducir transparencia/movimiento), estados de carga/vacío/error, rendimiento en dispositivos antiguos, iconos y pantalla de inicio.

@@ -22,8 +22,6 @@ targets:
         UILaunchScreen: {}
         UIBackgroundModes: [audio]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
-        UIFileSharingEnabled: true
-        LSSupportsOpeningDocumentsInPlace: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.slowmode.app
@@ -32,6 +30,9 @@ targets:
     type: bundle.unit-test
     platform: iOS
     sources: [SlowModeTests]
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: SlowMode
 schemes:

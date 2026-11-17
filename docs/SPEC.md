@@ -98,7 +98,8 @@ Grafo: `AVAudioPlayerNode` → `AVAudioUnitTimePitch` → `AVAudioUnitReverb` �
 - Tono → `timePitch.pitch` en cents (semitonos × 100).
 - Reverb → `reverb.wetDryMix` (0–100), preset de sala tipo `.largeHall` o `.mediumHall`.
 - **Vincular tono al tempo**: cambia `AVAudioUnitTimePitch` por `AVAudioUnitVarispeed` (tono = 12·log2(velocidad), como en el prototipo) o calcula el pitch equivalente. Elige y documenta la decisión.
-- Slow Mode desactivado: rate 1, pitch 0, reverb 0 (bypass), sin cortes de audio al alternar.
+  - **Decisión:** siempre `AVAudioUnitTimePitch`; vinculado ⇒ `pitch = 1200·log2(rate)` cents. Cambiar a `AVAudioUnitVarispeed` exige reconectar el grafo y produce cortes.
+- Slow Mode desactivado: rate 1, pitch 0, reverb 0 (`reverb.bypass = true`), sin cortes de audio al alternar.
 - Cambios en tiempo real y suaves (sin clics al mover los sliders).
 - Sesión `AVAudioSession` en `.playback`, modo de fondo "audio", `MPNowPlayingInfoCenter` (con `playbackRate` real) y `MPRemoteCommandCenter` (play, pausa, siguiente, anterior, posición).
 - Interrupciones (llamadas) y cambios de ruta (quitar auriculares → pausa).
@@ -113,6 +114,7 @@ Grafo: `AVAudioPlayerNode` → `AVAudioUnitTimePitch` → `AVAudioUnitReverb` �
 ## 6. Importación
 
 - `.fileImporter` con `UTType.audio`, selección múltiple. Copiar al contenedor de la app (acceso con security-scoped resource). Leer metadatos y portada con `AVURLAsset`.
+- **Decisión:** el audio importado se guarda en `Application Support/Tracks/` (no en Documents ni compartido con Archivos), para que el usuario no lo borre por fuera de la app.
 - Formatos: MP3, AAC/M4A, WAV, AIFF, FLAC (comprobar compatibilidad con AVFoundation).
 - Errores: archivo no compatible, sin espacio, duplicado (ofrecer omitir).
 
