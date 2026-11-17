@@ -3,6 +3,7 @@
 name: SlowMode
 options:
   bundleIdPrefix: com.slowmode
+  developmentLanguage: es
   deploymentTarget:
     iOS: "26.0"
 settings:

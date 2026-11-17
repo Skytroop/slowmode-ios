@@ -1,0 +1,92 @@
+[
+  {
+    "id": "a0",
+    "name": "Luna Vale",
+    "genre": "Dream Pop",
+    "plays": 412,
+    "rank": 1,
+    "color": "#17171C",
+    "onColor": "#F4F4F5"
+  },
+  {
+    "id": "a1",
+    "name": "Kaito Rivers",
+    "genre": "Indie",
+    "plays": 356,
+    "rank": 2,
+    "color": "#F1C4DF",
+    "onColor": "#101014"
+  },
+  {
+    "id": "a2",
+    "name": "Mara Sol",
+    "genre": "Electrónica",
+    "plays": 298,
+    "rank": 3,
+    "color": "#F4F1EA",
+    "onColor": "#101014"
+  },
+  {
+    "id": "a3",
+    "name": "Paper Harbor",
+    "genre": "Indie",
+    "plays": 241,
+    "rank": 4,
+    "color": "#3A3F78",
+    "onColor": "#F4F4F5"
+  },
+  {
+    "id": "a4",
+    "name": "Noor Elise",
+    "genre": "R&B",
+    "plays": 187,
+    "rank": 5,
+    "color": "#D2BDB8",
+    "onColor": "#101014"
+  },
+  {
+    "id": "a5",
+    "name": "Velvet Static",
+    "genre": "Electrónica",
+    "plays": 164,
+    "rank": 6,
+    "color": "#2C2C34",
+    "onColor": "#F4F4F5"
+  },
+  {
+    "id": "a6",
+    "name": "Otis Wren",
+    "genre": "Indie",
+    "plays": 131,
+    "rank": 7,
+    "color": "#C5D1F6",
+    "onColor": "#101014"
+  },
+  {
+    "id": "a7",
+    "name": "Sable June",
+    "genre": "Dream Pop",
+    "plays": 97,
+    "rank": 8,
+    "color": "#F1C4DF",
+    "onColor": "#101014"
+  },
+  {
+    "id": "a8",
+    "name": "Halcyon Drive",
+    "genre": "Electrónica",
+    "plays": 64,
+    "rank": 9,
+    "color": "#3A3F78",
+    "onColor": "#F4F4F5"
+  },
+  {
+    "id": "a9",
+    "name": "Ines Marlow",
+    "genre": "R&B",
+    "plays": 38,
+    "rank": 10,
+    "color": "#D2BDB8",
+    "onColor": "#101014"
+  }
+]

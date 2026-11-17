@@ -1,0 +1,30 @@
+[
+  {
+    "id": "u0",
+    "name": "Mila",
+    "affinity": 92,
+    "color": "#B9C8F2",
+    "onColor": "#101014"
+  },
+  {
+    "id": "u1",
+    "name": "Yuki",
+    "affinity": 88,
+    "color": "#F1C4DF",
+    "onColor": "#101014"
+  },
+  {
+    "id": "u2",
+    "name": "Dario",
+    "affinity": 81,
+    "color": "#D2BDB8",
+    "onColor": "#101014"
+  },
+  {
+    "id": "u3",
+    "name": "Noa",
+    "affinity": 77,
+    "color": "#2C2C34",
+    "onColor": "#F4F4F5"
+  }
+]

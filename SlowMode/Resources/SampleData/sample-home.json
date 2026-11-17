@@ -1,0 +1,52 @@
+{
+  "songsPlayed": 1988,
+  "streakDays": 23,
+  "trackCount": 42,
+  "topGenres": [
+    {
+      "genre": "Indie",
+      "percent": 37
+    },
+    {
+      "genre": "Electrónica",
+      "percent": 26
+    },
+    {
+      "genre": "Dream Pop",
+      "percent": 26
+    },
+    {
+      "genre": "R&B",
+      "percent": 11
+    }
+  ],
+  "discover": {
+    "centerArtistId": "a0",
+    "similar": [
+      {
+        "artistId": "a7",
+        "affinity": 94
+      },
+      {
+        "artistId": "a6",
+        "affinity": 81
+      },
+      {
+        "artistId": "a8",
+        "affinity": 77
+      },
+      {
+        "artistId": "a2",
+        "affinity": 72
+      },
+      {
+        "artistId": "a4",
+        "affinity": 68
+      },
+      {
+        "artistId": "a9",
+        "affinity": 63
+      }
+    ]
+  }
+}
