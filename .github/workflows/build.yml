@@ -1,0 +1,73 @@
+# Compila en un Mac de GitHub, pasa los tests en el simulador y genera un
+# .ipa sin firmar para instalarlo con SideStore, AltStore o Sideloadly.
+name: Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Elegir la versión más reciente de Xcode 26
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app | grep -v -i beta | sort -V | tail -1)
+          echo "Usando $XCODE"
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: Generar el proyecto
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Tests (simulador)
+        run: |
+          SIM=$(xcrun simctl list devices available | grep -m1 -oE 'iPhone [0-9]+( Pro)?' || echo "iPhone 17")
+          echo "Simulador: $SIM"
+          set -o pipefail
+          xcodebuild test \
+            -project SlowMode.xcodeproj -scheme SlowMode \
+            -destination "platform=iOS Simulator,name=$SIM" \
+            | tee test.log | grep -E "error:|warning: |Test Case|\*\* TEST" || true
+          grep -q "\*\* TEST SUCCEEDED \*\*" test.log
+
+      - name: Compilar para iPhone (sin firmar)
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project SlowMode.xcodeproj -scheme SlowMode \
+            -configuration Release -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            | grep -E "error:|warning: |\*\* BUILD" || true
+          test -d build/Build/Products/Release-iphoneos/SlowMode.app
+
+      - name: Empaquetar el .ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/SlowMode.app Payload/
+          zip -qry SlowMode.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SlowMode-ipa
+          path: SlowMode.ipa
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: logs
+          path: test.log
+          if-no-files-found: ignore

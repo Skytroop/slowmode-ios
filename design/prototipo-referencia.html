@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Slow Mode music player</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; background: {{rootBg}}; color: #F4F4F5; font-family: 'Geist', -apple-system, 'SF Pro Text', system-ui, sans-serif; font-size: 15px; line-height: 1.25; -webkit-font-smoothing: antialiased">
+
+<div aria-hidden="true" style="position: absolute; inset: 0; overflow: hidden; pointer-events: none">
+<span style="position: absolute; border-radius: 50%; filter: blur(70px); transition: transform 600ms linear, opacity 500ms ease; left: -130px; top: -90px; width: 420px; height: 420px; background: #AEBFF0; opacity: {{ambA}}; transform: translate({{ambAx}})"></span>
+<span style="position: absolute; border-radius: 50%; filter: blur(70px); transition: transform 600ms linear, opacity 500ms ease; right: -150px; top: 300px; width: 360px; height: 360px; background: #EDB9D8; opacity: {{ambB}}; transform: translate({{ambBx}})"></span>
+<span style="position: absolute; border-radius: 50%; filter: blur(70px); transition: transform 600ms linear, opacity 500ms ease; left: 10px; bottom: -140px; width: 400px; height: 400px; background: #3A3F78; opacity: {{ambC}}; transform: translate({{ambAx}})"></span>
+</div>
+
+<sc-if value="{{showMain}}" hint-placeholder-val="{{true}}">
+<div ref="{{setSc}}" style="position: absolute; inset: 0; opacity: {{enterOpacity}}; transform: {{enterShift}}; transition: {{enterTransition}}; overflow-y: auto; scrollbar-width: none; box-sizing: border-box; padding: 60px 16px 198px">
+
+<sc-if value="{{isHome}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding: 0 0 0 4px">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 13px; color: #A3A3AD">November · 42 tracks on this iPhone</span>
+<h1 style="margin: 0; font-size: 30px; font-weight: 500; letter-spacing: -0.02em">Your listening</h1>
+</div>
+<button type="button" onClick="{{toggleOled}}" aria-pressed="{{oledStr}}" aria-label="Pure black appearance" style="flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: rgba(255,255,255,0.1); backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), inset 0 0 0 1px rgba(255,255,255,0.1), 0 6px 18px rgba(0,0,0,0.25); color: {{oledColor}}; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="fill: {{oledFill}}; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round"><path d="M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z"></path></svg>
+</button>
+</div>
+
+<section style="position: relative; height: 288px; border-radius: 28px; overflow: hidden; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.5); box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 18px 50px rgba(174,191,240,0.22); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); background: radial-gradient(120% 90% at 8% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 52%), linear-gradient(145deg, rgba(203,214,248,0.9) 0%, rgba(174,191,240,0.74) 100%); color: #101014">
+<span aria-hidden="true" style="position: absolute; border-radius: 50%; border: 1px solid rgba(16,16,20,0.13); box-sizing: border-box; left: 96px; top: 86px; width: 164px; height: 128px"></span>
+<span aria-hidden="true" style="position: absolute; border-radius: 50%; border: 1px solid rgba(16,16,20,0.13); box-sizing: border-box; left: 50px; top: 54px; width: 256px; height: 192px"></span>
+<span aria-hidden="true" style="position: absolute; border-radius: 50%; border: 1px solid rgba(16,16,20,0.13); box-sizing: border-box; left: -8px; top: 12px; width: 372px; height: 276px; border-style: dashed"></span>
+<span style="position: absolute; left: 20px; top: 18px; font-size: 13px; font-weight: 500; color: #2F3654">Discover next</span>
+<span style="position: absolute; right: 20px; top: 18px; font-size: 12px; color: #2F3654">Similar to {{topArtist.name}}</span>
+<button type="button" onClick="{{topArtist.open}}" aria-label="{{topArtist.label}}" style="position: absolute; left: 126px; top: 98px; width: 104px; height: 104px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: {{topArtist.bg}}; color: {{topArtist.fg}}; font: inherit; box-shadow: inset 0 1.5px 1px rgba(255,255,255,0.5), inset 0 -6px 12px rgba(0,0,0,0.14), inset 0 0 0 1px rgba(255,255,255,0.22), 0 10px 26px rgba(40,50,100,0.35); backdrop-filter: blur(6px) saturate(160%); -webkit-backdrop-filter: blur(6px) saturate(160%); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px">
+<span style="font-size: 15px; font-weight: 600">{{topArtist.name}}</span>
+<span style="font-size: 10px">Your top artist</span>
+</button>
+<sc-for list="{{radar}}" as="b" hint-placeholder-count="6">
+<button type="button" onClick="{{b.open}}" aria-label="{{b.label}}" style="position: absolute; left: {{b.left}}; top: {{b.top}}; width: {{b.d}}; height: {{b.d}}; border-radius: 50%; border: 0; padding: 0; margin: 0; background: {{b.bg}}; color: {{b.fg}}; font: inherit; font-size: 11px; font-weight: 500; box-shadow: inset 0 1.5px 1px rgba(255,255,255,0.5), inset 0 -6px 12px rgba(0,0,0,0.14), inset 0 0 0 1px rgba(255,255,255,0.22), 0 6px 14px rgba(40,50,100,0.22); backdrop-filter: blur(6px) saturate(160%); -webkit-backdrop-filter: blur(6px) saturate(160%); cursor: pointer; display: flex; align-items: center; justify-content: center">{{b.short}}</button>
+</sc-for>
+</section>
+
+<div style="display: grid; grid-template-columns: 208px minmax(0, 1fr); gap: 10px">
+<section style="position: relative; height: 262px; border-radius: 28px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); box-sizing: border-box">
+<span style="position: absolute; left: 16px; top: 16px; font-size: 13px; color: #A3A3AD">Top genres</span>
+<div style="position: absolute; left: 0; top: 36px; width: 206px; height: 166px">
+<sc-for list="{{vibes}}" as="g" hint-placeholder-count="4">
+<button type="button" onClick="{{g.pick}}" aria-label="{{g.label}}" style="position: absolute; left: {{g.left}}; top: {{g.top}}; width: {{g.d}}; height: {{g.d}}; border-radius: 50%; border: 0; padding: 0; margin: 0; background: {{g.bg}}; color: {{g.fg}}; font: inherit; box-shadow: {{g.ring}}; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px">
+<span style="font-size: {{g.fs}}; font-weight: 500; line-height: 1.1">{{g.pct}}</span>
+<span style="font-size: 10px; line-height: 1.1">{{g.name}}</span>
+</button>
+</sc-for>
+</div>
+<span style="position: absolute; left: 16px; right: 16px; bottom: 14px; font-size: 11px; line-height: 1.4; color: #A3A3AD">Indie 37% · Electronic 26% · Dream Pop 26% · R&amp;B 11%</span>
+</section>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<section style="flex: 1; border-radius: 28px; padding: 14px 16px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.5); box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 18px 50px rgba(237,185,216,0.22); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); background: radial-gradient(120% 90% at 8% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 52%), linear-gradient(145deg, rgba(246,211,232,0.9) 0%, rgba(237,185,216,0.74) 100%); color: #101014; display: flex; flex-direction: column; justify-content: space-between">
+<span style="font-size: 13px; color: #4A2B3E">Songs played</span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 36px; line-height: 1; font-weight: 300; letter-spacing: -0.03em">1,988</span>
+<span style="font-size: 12px; color: #4A2B3E">across 10 artists</span>
+</div>
+</section>
+<section style="flex: 1; border-radius: 28px; padding: 14px 16px; box-sizing: border-box; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); display: flex; flex-direction: column; justify-content: space-between">
+<span style="font-size: 13px; color: #A3A3AD">Listening streak</span>
+<div style="display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 36px; line-height: 1; font-weight: 300; letter-spacing: -0.03em">23</span>
+<span style="font-size: 12px; color: #A3A3AD">days in a row</span>
+</div>
+</section>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; padding: 0 0 0 4px">
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600">All artists</h2>
+<span style="font-size: 12px; color: #A3A3AD">{{countLabel}}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 8px">
+<button type="button" onClick="{{toggleSort}}" aria-label="{{sortLabel}}" style="width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: rgba(255,255,255,0.1); backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), inset 0 0 0 1px rgba(255,255,255,0.1), 0 6px 18px rgba(0,0,0,0.25); color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M7 5v14M7 19l-3-3M7 19l3-3M17 19V5M17 5l-3 3M17 5l3 3"></path></svg>
+</button>
+<div style="display: flex; align-items: center; height: 44px; padding: 0 4px; border-radius: 22px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); box-sizing: border-box">
+<button type="button" onClick="{{setList}}" aria-pressed="{{listPressed}}" style="height: 44px; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 17px; background: {{listBg}}; color: {{listFg}}; font-size: 13px; font-weight: 500">
+<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01"></path></svg>
+<span>List</span>
+</span>
+</button>
+<button type="button" onClick="{{setGrid}}" aria-pressed="{{gridPressed}}" style="height: 44px; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 17px; background: {{gridBg}}; color: {{gridFg}}; font-size: 13px; font-weight: 500">
+<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M5 5h5v5H5zM14 5h5v5h-5zM5 14h5v5H5zM14 14h5v5h-5z"></path></svg>
+<span>Grid</span>
+</span>
+</button>
+</div>
+</div>
+</div>
+
+<div style="display: flex; overflow-x: auto; scrollbar-width: none; margin: -6px -16px; padding: 0 12px">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="5">
+<button type="button" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="flex: none; height: 44px; border: 0; padding: 0 4px; margin: 0; background: transparent; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="display: flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 17px; backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), inset 0 0 0 1px rgba(255,255,255,0.1); background: {{c.bg}}; color: {{c.fg}}; font-size: 13px; font-weight: 500; white-space: nowrap">{{c.label}}</span>
+</button>
+</sc-for>
+</div>
+
+<sc-if value="{{isList}}" hint-placeholder-val="{{true}}">
+<div style="border-radius: 24px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); overflow: hidden; display: flex; flex-direction: column">
+<sc-for list="{{artists}}" as="a" hint-placeholder-count="6">
+<button type="button" onClick="{{a.open}}" aria-label="{{a.label}}" style="display: flex; align-items: center; gap: 12px; width: 100%; min-height: 72px; box-sizing: border-box; padding: 10px 16px; border: 0; border-top: 1px solid {{a.line}}; margin: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer">
+<span style="flex: none; width: 44px; height: 44px; border-radius: 50%; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.14); background: {{a.bg}}; color: {{a.fg}}; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center">{{a.initials}}</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px">
+<span style="max-width: 100%; font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{a.name}}</span>
+<span style="display: flex; align-items: center; height: 22px; padding: 0 10px; border-radius: 11px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3); background: {{a.pillBg}}; color: {{a.pillFg}}; font-size: 12px; font-weight: 500">{{a.genre}}</span>
+</span>
+<span style="flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 10px">
+<span style="font-size: 13px; color: #D4D4D8; font-variant-numeric: tabular-nums">{{a.playsLabel}}</span>
+<span style="display: block; width: 64px; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.14); overflow: hidden"><span style="display: block; width: {{a.barW}}; height: 3px; border-radius: 2px; background: #F4F4F5"></span></span>
+</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{isGrid}}" hint-placeholder-val="{{false}}">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{artists}}" as="a" hint-placeholder-count="6">
+<button type="button" onClick="{{a.open}}" aria-label="{{a.label}}" style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; box-sizing: border-box; padding: 14px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.14); margin: 0; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); color: inherit; font: inherit; text-align: left; cursor: pointer">
+<span style="width: 56px; height: 56px; border-radius: 50%; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.14); background: {{a.bg}}; color: {{a.fg}}; font-size: 17px; font-weight: 500; display: flex; align-items: center; justify-content: center">{{a.initials}}</span>
+<span style="max-width: 100%; font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{a.name}}</span>
+<span style="display: flex; align-items: center; height: 22px; padding: 0 10px; border-radius: 11px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3); background: {{a.pillBg}}; color: {{a.pillFg}}; font-size: 12px; font-weight: 500">{{a.genre}}</span>
+<span style="display: flex; align-items: center; gap: 8px; width: 100%">
+<span style="flex: 1; display: block; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.14); overflow: hidden"><span style="display: block; width: {{a.barW}}; height: 3px; border-radius: 2px; background: #F4F4F5"></span></span>
+<span style="font-size: 12px; color: #D4D4D8; font-variant-numeric: tabular-nums">{{a.playsLabel}}</span>
+</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+</div>
+</sc-if>
+
+<sc-if value="{{isArtist}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+
+<section style="border-radius: 28px; padding: 14px 20px 20px 14px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.5); box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 18px 50px rgba(174,191,240,0.22); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); background: radial-gradient(120% 90% at 8% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 52%), linear-gradient(145deg, rgba(203,214,248,0.9) 0%, rgba(174,191,240,0.74) 100%); color: #101014; display: flex; flex-direction: column; gap: 14px">
+<button type="button" onClick="{{backFromArtist}}" aria-label="Back" style="width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: rgba(16,16,20,0.1); color: #101014; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M15 5l-7 7 7 7"></path></svg>
+</button>
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding-left: 6px">
+<div style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0">
+<span style="width: 84px; height: 84px; border-radius: 50%; background: {{artist.bg}}; color: {{artist.fg}}; font-size: 26px; font-weight: 500; display: flex; align-items: center; justify-content: center">{{artist.initials}}</span>
+<h1 style="margin: 0; font-size: 28px; font-weight: 500; letter-spacing: -0.02em">{{artist.name}}</h1>
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="display: flex; align-items: center; height: 24px; padding: 0 11px; border-radius: 12px; background: #101014; color: #F4F4F5; font-size: 12px; font-weight: 500">{{artist.genre}}</span>
+<span style="font-size: 13px; color: #2F3654">{{artist.meta}}</span>
+</div>
+</div>
+<button type="button" onClick="{{playTop}}" aria-label="Play most played" style="flex: none; width: 56px; height: 56px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: #101014; color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" style="fill: currentColor"><path d="M8 5.5v13l11-6.5z"></path></svg>
+</button>
+</div>
+</section>
+
+<div style="display: flex; align-items: center; height: 48px; padding: 0 4px; border-radius: 24px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); box-sizing: border-box">
+<button type="button" onClick="{{tabSongs}}" aria-pressed="{{songsPressed}}" style="flex: 1; height: 48px; border: 0; padding: 0; margin: 0; background: transparent; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="flex: 1; display: flex; align-items: center; justify-content: center; height: 38px; border-radius: 19px; background: {{songsBg}}; color: {{songsFg}}; font-size: 14px; font-weight: 500">Most played</span>
+</button>
+<button type="button" onClick="{{tabVersions}}" aria-pressed="{{versPressed}}" style="flex: 1; height: 48px; border: 0; padding: 0; margin: 0; background: transparent; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; height: 38px; border-radius: 19px; background: {{versBg}}; color: {{versFg}}; font-size: 14px; font-weight: 500">
+<span>Community presets</span>
+</span>
+</button>
+</div>
+
+<sc-if value="{{showSongs}}" hint-placeholder-val="{{false}}">
+<div style="border-radius: 24px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); overflow: hidden; display: flex; flex-direction: column">
+<sc-for list="{{songs}}" as="s" hint-placeholder-count="4">
+<div style="display: flex; align-items: center; gap: 2px; min-height: 68px; padding: 0 16px; border-top: 1px solid {{s.line}}">
+<button type="button" onClick="{{s.play}}" aria-label="{{s.label}}" style="flex: 1; min-width: 0; height: 68px; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 12px">
+<span style="flex: none; width: 14px; font-size: 13px; color: #A3A3AD; font-variant-numeric: tabular-nums">{{s.rank}}</span>
+<span style="flex: none; width: 44px; height: 44px; border-radius: 12px; background: {{s.coverBg}}; color: {{s.coverFg}}; display: flex; align-items: center; justify-content: center"><span style="display: block; width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; box-sizing: border-box"></span></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 16px; font-weight: 500; color: {{s.titleColor}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{s.title}}</span>
+<span style="font-size: 12px; color: #A3A3AD; font-variant-numeric: tabular-nums">{{s.sub}}</span>
+</span>
+</button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+</div>
+</sc-if>
+
+<sc-if value="{{isSearch}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+
+<h1 style="margin: 0; font-size: 30px; font-weight: 500; letter-spacing: -0.02em; padding: 0 4px">Search</h1>
+
+<div style="position: relative">
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="position: absolute; left: 16px; top: 14px; color: #A3A3AD; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4"></path></svg>
+<input id="sm-q" type="search" aria-label="Search" placeholder="Artists, songs, presets" value="{{query}}" onChange="{{setQuery}}" style="width: 100%; height: 48px; box-sizing: border-box; border: 0; border-radius: 24px; padding: 0 46px; background: rgba(255,255,255,0.1); backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), inset 0 0 0 1px rgba(255,255,255,0.1), 0 6px 18px rgba(0,0,0,0.25); color: #F4F4F5; font: inherit; font-size: 16px">
+<sc-if value="{{hasQuery}}" hint-placeholder-val="{{false}}">
+<button type="button" onClick="{{clearQuery}}" aria-label="Clear search" style="position: absolute; right: 2px; top: 2px; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; color: #A3A3AD; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</button>
+</sc-if>
+</div>
+
+<div style="display: flex; overflow-x: auto; scrollbar-width: none; margin: -6px -16px; padding: 0 12px">
+<sc-for list="{{scopes}}" as="c" hint-placeholder-count="4">
+<button type="button" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="flex: none; height: 44px; border: 0; padding: 0 4px; margin: 0; background: transparent; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="display: flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 17px; backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), inset 0 0 0 1px rgba(255,255,255,0.1); background: {{c.bg}}; color: {{c.fg}}; font-size: 13px; font-weight: 500; white-space: nowrap">{{c.label}}</span>
+</button>
+</sc-for>
+</div>
+
+<sc-if value="{{noQuery}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600; padding: 0 4px">Browse</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{browse}}" as="g" hint-placeholder-count="8">
+<button type="button" onClick="{{g.pick}}" style="position: relative; overflow: hidden; height: 88px; border-radius: 24px; border: 1px solid {{g.border}}; padding: 0 16px 14px; margin: 0; background: {{g.bg}}; color: {{g.fg}}; font: inherit; font-size: 16px; font-weight: 500; text-align: left; cursor: pointer; display: flex; align-items: flex-end">
+<span style="position: absolute; right: -14px; top: -14px; width: 64px; height: 64px; border-radius: 50%; background: {{g.dot}}"></span>
+<span style="position: relative">{{g.name}}</span>
+</button>
+</sc-for>
+</div>
+
+<sc-if value="{{hasRecents}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 0 0 4px; margin-top: 6px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600">Recent searches</h2>
+<button type="button" onClick="{{clearRecents}}" style="height: 44px; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; padding: 0 4px; color: #A3A3AD; font-size: 13px; font-weight: 500">Clear</button>
+</div>
+<div style="border-radius: 24px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); overflow: hidden; display: flex; flex-direction: column">
+<sc-for list="{{recents}}" as="r" hint-placeholder-count="4">
+<button type="button" onClick="{{r.pick}}" style="display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; box-sizing: border-box; padding: 0 16px; border: 0; border-top: 1px solid {{r.line}}; margin: 0; background: transparent; color: inherit; font: inherit; font-size: 15px; text-align: left; cursor: pointer">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="flex: none; color: #A3A3AD; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7.5V12l3 2"></path></svg>
+<span>{{r.text}}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{hasResults}}" hint-placeholder-val="{{false}}">
+<div style="border-radius: 24px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); overflow: hidden; display: flex; flex-direction: column">
+<sc-for list="{{results}}" as="r" hint-placeholder-count="5">
+<button type="button" onClick="{{r.go}}" aria-label="{{r.label}}" style="display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; box-sizing: border-box; padding: 8px 16px; border: 0; border-top: 1px solid {{r.line}}; margin: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer">
+<span style="flex: none; width: 44px; height: 44px; border-radius: {{r.radius}}; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.1); background: {{r.bg}}; color: {{r.fg}}; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center">{{r.glyph}}</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.title}}</span>
+<span style="font-size: 12px; color: #A3A3AD; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums">{{r.sub}}</span>
+</span>
+<sc-if value="{{r.hasBadge}}" hint-placeholder-val="{{false}}">
+<span style="flex: none; display: flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3); background: {{r.badgeBg}}; color: {{r.badgeFg}}; font-size: 11px; font-weight: 500; white-space: nowrap">{{r.badge}}</span>
+</sc-if>
+<span style="flex: none; font-size: 12px; color: #A3A3AD; font-variant-numeric: tabular-nums">{{r.tag}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{noResults}}" hint-placeholder-val="{{false}}">
+<div style="border-radius: 24px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); padding: 28px 24px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center">
+<span style="font-size: 16px; font-weight: 500">No results</span>
+<span style="font-size: 13px; line-height: 1.4; color: #A3A3AD">Check the spelling, or try a different filter.</span>
+</div>
+</sc-if>
+
+</div>
+</sc-if>
+
+<sc-if value="{{isLibrary}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 0 0 4px">
+<h1 style="margin: 0; font-size: 30px; font-weight: 500; letter-spacing: -0.02em">Library</h1>
+<button type="button" onClick="{{createPlaylist}}" style="height: 44px; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px 0 10px; border-radius: 18px; background: #F4F4F5; color: #101014; font-size: 13px; font-weight: 600">
+<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round"><path d="M12 5v14M5 12h14"></path></svg>
+<span>Create playlist</span>
+</span>
+</button>
+</div>
+
+<button type="button" onClick="{{openImport}}" style="display: flex; align-items: center; gap: 12px; min-height: 68px; box-sizing: border-box; padding: 10px 16px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.14); margin: 0; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 12px 32px rgba(0,0,0,0.3); color: inherit; font: inherit; text-align: left; cursor: pointer">
+<span style="flex: none; width: 40px; height: 40px; border-radius: 50%; background: rgba(185,200,242,0.92); box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); color: #101014; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M12 15V4M12 4l-4 4M12 4l4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 15px; font-weight: 500">Import or upload audio</span>
+<span style="font-size: 12px; color: #A3A3AD">Files, iCloud Drive, or your own recordings</span>
+</span>
+</button>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{libTiles}}" as="t" hint-placeholder-count="4">
+<button type="button" onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="display: flex; align-items: center; gap: 12px; height: 76px; box-sizing: border-box; padding: 0 14px; border-radius: 24px; border: 1.5px solid {{t.border}}; margin: 0; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); color: inherit; font: inherit; text-align: left; cursor: pointer">
+<span style="flex: none; width: 40px; height: 40px; border-radius: 50%; background: {{t.bg}}; color: #101014; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="{{t.icon}}"></path></svg>
+</span>
+<span style="min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 15px; font-weight: 500; white-space: nowrap">{{t.name}}</span>
+<span style="font-size: 12px; color: #A3A3AD; font-variant-numeric: tabular-nums">{{t.count}}</span>
+</span>
+</button>
+</sc-for>
+</div>
+
+<sc-if value="{{hasLibItems}}" hint-placeholder-val="{{true}}">
+<div style="border-radius: 24px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); overflow: hidden; display: flex; flex-direction: column">
+<sc-for list="{{libItems}}" as="r" hint-placeholder-count="5">
+<button type="button" onClick="{{r.go}}" aria-label="{{r.label}}" style="display: flex; align-items: center; gap: 12px; width: 100%; min-height: 64px; box-sizing: border-box; padding: 8px 16px; border: 0; border-top: 1px solid {{r.line}}; margin: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer">
+<span style="flex: none; width: 44px; height: 44px; border-radius: {{r.radius}}; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.1); background: {{r.bg}}; color: {{r.fg}}; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center">{{r.glyph}}</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.title}}</span>
+<span style="font-size: 12px; color: #A3A3AD; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums">{{r.sub}}</span>
+</span>
+<sc-if value="{{r.hasBadge}}" hint-placeholder-val="{{false}}">
+<span style="flex: none; display: flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3); background: {{r.badgeBg}}; color: {{r.badgeFg}}; font-size: 11px; font-weight: 500; white-space: nowrap">{{r.badge}}</span>
+</sc-if>
+<span style="flex: none; font-size: 12px; color: #A3A3AD; font-variant-numeric: tabular-nums">{{r.tag}}</span>
+</button>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{noLibItems}}" hint-placeholder-val="{{false}}">
+<div style="border-radius: 24px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); padding: 28px 24px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center">
+<span style="font-size: 16px; font-weight: 500">Nothing saved here yet</span>
+<span style="font-size: 13px; line-height: 1.4; color: #A3A3AD">Tap the heart on a song in Now Playing to keep it here.</span>
+</div>
+</sc-if>
+
+<div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px; padding: 0 4px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600">Saved Slow Mode presets</h2>
+<span style="font-size: 13px; color: #A3A3AD">Recipes you liked or shared</span>
+</div>
+
+</div>
+</sc-if>
+
+<sc-if value="{{isCommunity}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 14px">
+
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 0 4px">
+<h1 style="margin: 0; font-size: 30px; font-weight: 500; letter-spacing: -0.02em">Community</h1>
+<p style="margin: 0; font-size: 14px; line-height: 1.4; color: #A3A3AD">Original mixes, listeners and Slow Mode presets.</p>
+</div>
+
+<h2 style="margin: 6px 0 0; padding: 0 4px; font-size: 17px; font-weight: 600">Original mixes</h2>
+<div style="display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px">
+<sc-for list="{{playlists}}" as="p" hint-placeholder-count="4">
+<button type="button" onClick="{{p.play}}" aria-label="{{p.label}}" style="flex: none; width: 148px; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 8px">
+<span style="position: relative; display: block; width: 148px; height: 148px; border-radius: 24px; overflow: hidden; background: {{p.bg}}">
+<span style="position: absolute; left: 22px; top: 40px; width: 68px; height: 68px; border-radius: 50%; background: {{p.c1}}"></span>
+<span style="position: absolute; left: 62px; top: 52px; width: 56px; height: 56px; border-radius: 50%; background: {{p.c2}}"></span>
+</span>
+<span style="display: flex; flex-direction: column; gap: 3px; padding: 0 4px; min-width: 0; width: 100%; box-sizing: border-box">
+<span style="font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{p.name}}</span>
+<span style="font-size: 12px; color: #A3A3AD; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{p.sub}}</span>
+</span>
+</button>
+</sc-for>
+</div>
+
+<h2 style="margin: 6px 0 0; padding: 0 4px; font-size: 17px; font-weight: 600">Listeners like you</h2>
+<div style="display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px">
+<sc-for list="{{listeners}}" as="u" hint-placeholder-count="4">
+<div style="flex: none; width: 132px; box-sizing: border-box; padding: 14px 10px 6px; border-radius: 24px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); display: flex; flex-direction: column; align-items: center; gap: 4px">
+<span style="width: 52px; height: 52px; border-radius: 50%; background: {{u.bg}}; color: {{u.fg}}; font-size: 16px; font-weight: 500; display: flex; align-items: center; justify-content: center; margin-bottom: 4px">{{u.initials}}</span>
+<span style="font-size: 15px; font-weight: 500">{{u.name}}</span>
+<span style="font-size: 12px; color: #A3A3AD; font-variant-numeric: tabular-nums">{{u.match}}</span>
+<button type="button" onClick="{{u.follow}}" aria-pressed="{{u.pressed}}" aria-label="{{u.label}}" style="height: 44px; border: 0; padding: 0; margin: 0; background: transparent; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="display: flex; align-items: center; height: 32px; padding: 0 16px; border-radius: 16px; background: {{u.btnBg}}; color: {{u.btnFg}}; font-size: 13px; font-weight: 500">{{u.btnText}}</span>
+</button>
+</div>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px; padding: 0 4px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600">Slow Mode presets</h2>
+<span style="font-size: 13px; color: #A3A3AD">Tempo, pitch and reverb recipes for tracks you own. No audio is shared.</span>
+</div>
+
+</div>
+</sc-if>
+
+<sc-if value="{{showVersions}}" hint-placeholder-val="{{false}}">
+<div style="margin-top: {{vTop}}; display: flex; flex-direction: column; gap: 8px">
+
+<sc-if value="{{showVFilters}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 0 0 4px">
+<span style="font-size: 12px; color: #A3A3AD">{{vCountLabel}}</span>
+<button type="button" onClick="{{toggleVSort}}" aria-label="Change sort order" style="height: 44px; border: 0; padding: 0; margin: 0; background: transparent; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 17px; background: rgba(255,255,255,0.1); backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), inset 0 0 0 1px rgba(255,255,255,0.1), 0 6px 18px rgba(0,0,0,0.25); color: #F4F4F5; font-size: 13px; font-weight: 500">
+<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M7 5v14M7 19l-3-3M7 19l3-3M17 19V5M17 5l-3 3M17 5l3 3"></path></svg>
+<span>{{vSortLabel}}</span>
+</span>
+</button>
+</div>
+
+<div style="display: flex; overflow-x: auto; scrollbar-width: none; margin: -4px -16px; padding: 0 12px">
+<sc-for list="{{vchips}}" as="c" hint-placeholder-count="5">
+<button type="button" onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="flex: none; height: 44px; border: 0; padding: 0 4px; margin: 0; background: transparent; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="display: flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 17px; backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), inset 0 0 0 1px rgba(255,255,255,0.1); background: {{c.bg}}; color: {{c.fg}}; font-size: 13px; font-weight: 500; white-space: nowrap">{{c.label}}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{hasVersions}}" hint-placeholder-val="{{true}}">
+<div style="border-radius: 24px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); overflow: hidden; display: flex; flex-direction: column">
+<sc-for list="{{versions}}" as="v" hint-placeholder-count="5">
+<div style="display: flex; align-items: center; gap: 2px; padding: 4px 4px 4px 16px; border-top: 1px solid {{v.line}}">
+<button type="button" onClick="{{v.play}}" aria-label="{{v.playLabel}}" style="flex: 1; min-width: 0; min-height: 76px; border: 0; padding: 8px 0; margin: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 12px">
+<span style="flex: none; width: 40px; height: 40px; border-radius: 50%; background: {{v.abg}}; color: {{v.afg}}; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center">{{v.initials}}</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px">
+<span style="display: flex; align-items: baseline; gap: 8px">
+<span style="flex: 1; min-width: 0; font-size: 15px; font-weight: 500; color: {{v.nameColor}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{v.name}}</span>
+<span style="flex: none; font-size: 12px; color: #A3A3AD; font-variant-numeric: tabular-nums">{{v.playsLabel}}</span>
+</span>
+<span style="font-size: 12px; color: #A3A3AD; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{v.sub}}</span>
+<span style="display: flex; align-items: center; gap: 6px">
+<span style="display: flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3); background: {{v.tbg}}; color: #101014; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums">{{v.tempoLabel}}</span>
+<span style="display: flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3); background: rgba(255,255,255,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); color: #D4D4D8; font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums">{{v.pitchLabel}}</span>
+<sc-if value="{{v.hasReverb}}" hint-placeholder-val="{{false}}">
+<span style="display: flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); background: rgba(255,255,255,0.12); color: #D4D4D8; font-size: 12px; font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums">{{v.reverbLabel}}</span>
+</sc-if>
+</span>
+</span>
+<span style="flex: none; width: 36px; height: 36px; border-radius: 50%; background: {{v.btnBg}}; color: {{v.btnFg}}; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" style="fill: currentColor"><path d="M8 5.5v13l11-6.5z"></path></svg>
+</span>
+</button>
+<button type="button" onClick="{{v.like}}" aria-pressed="{{v.likedStr}}" aria-label="{{v.likeLabel}}" style="flex: none; width: 48px; height: 56px; border: 0; padding: 0; margin: 0; background: transparent; color: {{v.heartColor}}; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px">
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="fill: {{v.heartFill}}; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg>
+<span style="font-size: 11px; font-variant-numeric: tabular-nums">{{v.likesLabel}}</span>
+</button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{noVersions}}" hint-placeholder-val="{{false}}">
+<div style="border-radius: 24px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); padding: 28px 24px; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center">
+<span style="font-size: 16px; font-weight: 500">Nothing here yet</span>
+<span style="font-size: 13px; line-height: 1.4; color: #A3A3AD">Open a song, tune Slow Mode, and share your settings to start this list.</span>
+</div>
+</sc-if>
+
+</div>
+</sc-if>
+
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 24px 12px 0; background: {{fadeBg}}; pointer-events: none; display: flex; flex-direction: column">
+<div style="position: relative; overflow: hidden; display: flex; align-items: center; gap: 2px; height: 64px; box-sizing: border-box; padding: 0 10px; border-radius: 32px; pointer-events: auto; background: {{barBg}}; backdrop-filter: blur(30px) saturate(190%); -webkit-backdrop-filter: blur(30px) saturate(190%); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(255,255,255,0.06), 0 14px 36px rgba(0,0,0,0.45)">
+<button type="button" onClick="{{openPlayer}}" aria-label="Open Now Playing" style="flex: 1; min-width: 0; height: 62px; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px">
+<span style="flex: none; width: 44px; height: 44px; border-radius: 50%; box-shadow: inset 0 1px 0 rgba(255,255,255,0.8); background: radial-gradient(120% 90% at 8% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 52%), linear-gradient(145deg, rgba(203,214,248,0.9) 0%, rgba(174,191,240,0.74) 100%); color: #101014; display: flex; align-items: center; justify-content: center"><span style="display: block; width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; box-sizing: border-box"></span></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{now.title}}</span>
+<span style="font-size: 12px; color: #C9C9D1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{now.miniSub}}</span>
+</span>
+</button>
+<sc-if value="{{slowOn}}" hint-placeholder-val="{{false}}">
+<button type="button" onClick="{{toggleSlow}}" aria-pressed="{{slowOnStr}}" aria-label="Slow Mode" style="flex: none; height: 44px; border: 0; padding: 0 4px; margin: 0; background: transparent; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="display: flex; align-items: center; gap: 5px; height: 32px; padding: 0 10px; border-radius: 16px; background: {{slowPillBg}}; color: {{slowPillFg}}; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums">
+<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M5 17a8 8 0 1 1 14 0M12 14l3.5-4.5"></path></svg>
+<span>{{slowPillText}}</span>
+</span>
+</button>
+</sc-if>
+<button type="button" onClick="{{togglePlay}}" aria-label="{{playLabel}}" style="flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: transparent; color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{paused}}" hint-placeholder-val="{{true}}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" style="fill: currentColor"><path d="M8 5.5v13l11-6.5z"></path></svg></sc-if>
+<sc-if value="{{playing}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" style="fill: currentColor"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"></path></svg></sc-if>
+</button>
+<span style="position: absolute; left: 0; bottom: 0; height: 2px; width: {{progressPct}}; background: #B9C8F2"></span>
+</div>
+<nav aria-label="Tabs" style="display: flex; height: 64px; box-sizing: border-box; margin: 8px 0 22px; padding: 0 3px; border-radius: 32px; pointer-events: auto; background: {{barBg}}; backdrop-filter: blur(30px) saturate(190%); -webkit-backdrop-filter: blur(30px) saturate(190%); border: 1px solid rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(255,255,255,0.06), 0 14px 36px rgba(0,0,0,0.45)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+<button type="button" onClick="{{t.go}}" aria-pressed="{{t.pressed}}" style="flex: 1; border: 0; padding: 0; margin: 5px 2px; border-radius: 27px; background: {{t.bg}}; box-shadow: {{t.glow}}; color: {{t.color}}; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px">
+<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="{{t.icon}}"></path></svg>
+<span style="font-size: 11px; font-weight: 500">{{t.label}}</span>
+</button>
+</sc-for>
+</nav>
+</div>
+</sc-if>
+
+<sc-if value="{{isPlayer}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; inset: 0; overflow-y: auto; scrollbar-width: none; box-sizing: border-box; padding: 52px 20px 36px; background: transparent; opacity: {{enterOpacity}}; transform: {{enterShift}}; transition: {{enterTransition}}; display: flex; flex-direction: column; gap: 14px">
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+<button type="button" onClick="{{closePlayer}}" aria-label="Close player" style="flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: rgba(255,255,255,0.1); backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), inset 0 0 0 1px rgba(255,255,255,0.1), 0 6px 18px rgba(0,0,0,0.25); color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M5 9l7 7 7-7"></path></svg>
+</button>
+<div style="min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px">
+<span style="font-size: 12px; color: #C9C9D1">Playing from</span>
+<span style="font-size: 14px; font-weight: 500">{{now.artist}}</span>
+</div>
+<span style="flex: none; width: 44px; height: 44px"></span>
+</div>
+
+<div style="flex: none; align-self: center; width: {{artSize}}; height: {{artSize}}; transition: width 220ms ease, height 220ms ease; border-radius: 36px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.5); box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 30px 80px rgba(174,191,240,0.35); background: radial-gradient(120% 90% at 8% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 52%), linear-gradient(145deg, rgba(203,214,248,0.9) 0%, rgba(174,191,240,0.74) 100%); display: flex; align-items: center; justify-content: center">
+<div style="width: 80%; height: 80%; border-radius: 50%; background: #101014; box-shadow: inset 0 0 0 16px #101014, inset 0 0 0 17px rgba(255,255,255,0.1), inset 0 0 0 32px #101014, inset 0 0 0 33px rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; transform: rotate({{angle}}); transition: transform 250ms linear">
+<div style="position: relative; width: 60px; height: 60px; border-radius: 50%; background: radial-gradient(120% 90% at 8% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 52%), linear-gradient(145deg, rgba(246,211,232,0.9) 0%, rgba(237,185,216,0.74) 100%)">
+<span style="position: absolute; left: 26px; top: 8px; width: 8px; height: 8px; border-radius: 50%; background: #101014"></span>
+</div>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; gap: 4px">
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{now.title}}</h1>
+<span style="font-size: 14px; color: #C9C9D1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{now.subtitle}}</span>
+</div>
+<button type="button" onClick="{{openAdd}}" aria-label="Add to playlist" style="flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; color: #F4F4F5; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 8v8M8 12h8"></path></svg>
+</button>
+<button type="button" onClick="{{toggleLikeSong}}" aria-pressed="{{songLikedStr}}" aria-label="Like song" style="flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; color: {{songHeartColor}}; display: flex; align-items: center; justify-content: center; margin-right: -8px">
+<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" style="fill: {{songHeartFill}}; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg>
+</button>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 0">
+<div style="position: relative; height: 28px">
+<span style="position: absolute; left: 0; right: 0; top: 12px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.14)"></span>
+<span style="position: absolute; left: 0; top: 12px; height: 4px; border-radius: 2px; width: {{seekFillW}}; background: #F4F4F5"></span>
+<span style="position: absolute; top: 7px; left: {{seekThumbLeft}}; width: 14px; height: 14px; border-radius: 50%; background: #F4F4F5"></span>
+<input type="range" aria-label="Seek" min="0" max="{{now.dur}}" step="1" value="{{posInt}}" onChange="{{seek}}" style="position: absolute; left: 0; top: -8px; width: 100%; height: 44px; margin: 0; opacity: 0; cursor: pointer">
+</div>
+<div style="display: flex; justify-content: space-between; font-size: 12px; color: #C9C9D1; font-variant-numeric: tabular-nums">
+<span>{{elapsed}}</span>
+<span>{{total}}</span>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between">
+<button type="button" onClick="{{toggleShuffle}}" aria-pressed="{{shuffleStr}}" aria-label="Shuffle" style="position: relative; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: transparent; color: {{shuffleColor}}; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M4 7h3c4 0 6 10 10 10h3M17 14l3 3-3 3M4 17h3c1.5 0 2.6-1.2 3.6-2.8M13.4 9.8C14.4 8.2 15.5 7 17 7h3M17 4l3 3-3 3"></path></svg>
+<span style="position: absolute; left: 20px; bottom: 3px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: {{shuffleDot}}"></span>
+</button>
+<button type="button" onClick="{{prev}}" aria-label="Previous song" style="width: 48px; height: 48px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: transparent; color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" style="fill: currentColor; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M18 6.5v11l-8-5.5zM7 6v12"></path></svg>
+</button>
+<button type="button" onClick="{{togglePlay}}" aria-label="{{playLabel}}" style="width: 68px; height: 68px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: rgba(255,255,255,0.92); box-shadow: inset 0 1px 0 #fff, inset 0 -6px 12px rgba(150,170,240,0.35), 0 10px 30px rgba(174,191,240,0.3); color: #101014; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{paused}}" hint-placeholder-val="{{true}}"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" style="fill: currentColor"><path d="M8.5 5.5v13l11-6.5z"></path></svg></sc-if>
+<sc-if value="{{playing}}" hint-placeholder-val="{{false}}"><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" style="fill: currentColor"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"></path></svg></sc-if>
+</button>
+<button type="button" onClick="{{next}}" aria-label="Next song" style="width: 48px; height: 48px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: transparent; color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" style="fill: currentColor; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M6 6.5v11l8-5.5zM17 6v12"></path></svg>
+</button>
+<button type="button" onClick="{{cycleRepeat}}" aria-pressed="{{repeatStr}}" aria-label="{{repeatLabel}}" style="position: relative; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: transparent; color: {{repeatColor}}; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="{{repeatIcon}}"></path></svg>
+<span style="position: absolute; left: 20px; bottom: 3px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: {{repeatDot}}"></span>
+</button>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between">
+<button type="button" onClick="{{openOutput}}" aria-label="{{outputLabel}}" style="height: 44px; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; color: #D4D4D8; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px">
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M5 17H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-1M12 15l5 6H7z"></path></svg>
+<span>{{output}}</span>
+</button>
+<button type="button" onClick="{{openQueue}}" style="height: 44px; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; color: #D4D4D8; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px">
+<span>Up next</span>
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round"><path d="M4 7h16M4 12h10M4 17h10M17 13.5v5l4-2.5z"></path></svg>
+</button>
+</div>
+
+<section style="flex: none; border-radius: 28px; background: {{regBg}}; backdrop-filter: blur(28px) saturate(170%); -webkit-backdrop-filter: blur(28px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -1px 0 rgba(255,255,255,0.04), 0 12px 32px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.14); padding: 12px 16px; display: flex; flex-direction: column; gap: 12px">
+
+<div style="display: flex; align-items: center; gap: 2px">
+<button type="button" onClick="{{toggleDrawer}}" aria-expanded="{{drawerStr}}" style="flex: 1; min-width: 0; min-height: 44px; border: 0; padding: 0; margin: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 12px">
+<span style="flex: none; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); color: #F4F4F5; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M5 17a8 8 0 1 1 14 0M12 14l3.5-4.5"></path></svg>
+</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 16px; font-weight: 600">Slow Mode</span>
+<span style="font-size: 12px; color: #C9C9D1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums">{{drawerCaption}}</span>
+</span>
+</button>
+<button type="button" role="switch" aria-checked="{{slowOnStr}}" aria-label="Slow Mode" onClick="{{toggleSlowPlayer}}" style="flex: none; width: 58px; height: 44px; border: 0; padding: 0; margin: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: flex-end">
+<span style="position: relative; display: block; width: 54px; height: 32px; border-radius: 16px; background: {{switchBg}}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 0 0 1px rgba(255,255,255,0.08); transition: background 160ms ease">
+<span style="position: absolute; top: 2px; left: {{knobLeft}}; width: 28px; height: 28px; border-radius: 50%; background: {{knobBg}}; transition: left 160ms ease"></span>
+</span>
+</button>
+<button type="button" onClick="{{toggleDrawer}}" aria-label="{{drawerLabel}}" style="flex: none; width: 40px; height: 44px; border: 0; padding: 0; margin: 0 -8px 0 0; background: transparent; color: #C9C9D1; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transform: rotate({{chevRot}}); transition: transform 200ms ease"><path d="M5 9l7 7 7-7"></path></svg>
+</button>
+</div>
+
+<sc-if value="{{drawerOpen}}" hint-placeholder-val="{{false}}">
+<div style="display: flex; flex-direction: column; gap: 12px">
+
+<div style="display: flex; flex-direction: column; gap: 10px; opacity: {{ctlOpacity}}; transition: opacity 160ms ease">
+
+<div style="display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<label for="sm-tempo" style="font-size: 13px; color: #C9C9D1">Tempo</label>
+<span style="font-size: 20px; font-weight: 500; letter-spacing: -0.01em; font-variant-numeric: tabular-nums">{{tempoReadout}}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 8px">
+<button type="button" onClick="{{tempoDown}}" disabled="{{ctlDisabled}}" aria-label="Slower by 0.01" style="flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: rgba(255,255,255,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M6 12h12"></path></svg>
+</button>
+<div style="position: relative; flex: 1; height: 44px">
+<span style="position: absolute; left: 0; right: 0; top: 19px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12); box-shadow: inset 0 1px 2px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.12)"></span>
+<span style="position: absolute; left: calc(50% - 1px); top: 13px; width: 2px; height: 18px; border-radius: 1px; background: rgba(255,255,255,0.3)"></span>
+<span style="position: absolute; top: 19px; height: 6px; border-radius: 3px; left: {{tempoFillLeft}}; width: {{tempoFillW}}; background: #B9C8F2; box-shadow: 0 0 12px rgba(185,200,242,0.55)"></span>
+<span style="position: absolute; top: 8px; left: {{tempoThumbLeft}}; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.94); box-shadow: 0 4px 12px rgba(0,0,0,0.45), inset 0 1px 0 #fff, inset 0 -4px 7px rgba(150,170,240,0.4)"></span>
+<input id="sm-tempo" type="range" min="0.5" max="1.5" step="0.01" value="{{tempo}}" onChange="{{setTempo}}" disabled="{{ctlDisabled}}" style="position: absolute; left: 0; top: 0; width: 100%; height: 44px; margin: 0; opacity: 0; cursor: pointer">
+</div>
+<button type="button" onClick="{{tempoUp}}" disabled="{{ctlDisabled}}" aria-label="Faster by 0.01" style="flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: rgba(255,255,255,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M12 6v12M6 12h12"></path></svg>
+</button>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<label for="sm-pitch" style="font-size: 13px; color: #C9C9D1">Pitch</label>
+<span style="font-size: 20px; font-weight: 500; letter-spacing: -0.01em; font-variant-numeric: tabular-nums">{{pitchReadout}}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 8px; opacity: {{pitchOpacity}}">
+<button type="button" onClick="{{pitchDown}}" disabled="{{pitchDisabled}}" aria-label="Down one semitone" style="flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: rgba(255,255,255,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M6 12h12"></path></svg>
+</button>
+<div style="position: relative; flex: 1; height: 44px">
+<span style="position: absolute; left: 0; right: 0; top: 19px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12); box-shadow: inset 0 1px 2px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.12)"></span>
+<span style="position: absolute; left: calc(50% - 1px); top: 13px; width: 2px; height: 18px; border-radius: 1px; background: rgba(255,255,255,0.3)"></span>
+<span style="position: absolute; top: 19px; height: 6px; border-radius: 3px; left: {{pitchFillLeft}}; width: {{pitchFillW}}; background: #F1C4DF; box-shadow: 0 0 12px rgba(241,196,223,0.55)"></span>
+<span style="position: absolute; top: 8px; left: {{pitchThumbLeft}}; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.94); box-shadow: 0 4px 12px rgba(0,0,0,0.45), inset 0 1px 0 #fff, inset 0 -4px 7px rgba(150,170,240,0.4)"></span>
+<input id="sm-pitch" type="range" min="-12" max="12" step="1" value="{{pitchInt}}" onChange="{{setPitch}}" disabled="{{pitchDisabled}}" style="position: absolute; left: 0; top: 0; width: 100%; height: 44px; margin: 0; opacity: 0; cursor: pointer">
+</div>
+<button type="button" onClick="{{pitchUp}}" disabled="{{pitchDisabled}}" aria-label="Up one semitone" style="flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: rgba(255,255,255,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M12 6v12M6 12h12"></path></svg>
+</button>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<label for="sm-reverb" style="font-size: 13px; color: #C9C9D1">Reverb</label>
+<span style="font-size: 20px; font-weight: 500; letter-spacing: -0.01em; font-variant-numeric: tabular-nums">{{reverbReadout}}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 8px">
+<button type="button" onClick="{{reverbDown}}" disabled="{{ctlDisabled}}" aria-label="Less reverb" style="flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: rgba(255,255,255,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M6 12h12"></path></svg>
+</button>
+<div style="position: relative; flex: 1; height: 44px">
+<span style="position: absolute; left: 0; right: 0; top: 19px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12); box-shadow: inset 0 1px 2px rgba(0,0,0,0.55), 0 1px 0 rgba(255,255,255,0.12)"></span>
+<span style="position: absolute; top: 19px; height: 6px; border-radius: 3px; left: 0; width: {{reverbFillW}}; background: #D2BDB8; box-shadow: 0 0 12px rgba(210,189,184,0.5)"></span>
+<span style="position: absolute; top: 8px; left: {{reverbThumbLeft}}; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.94); box-shadow: 0 4px 12px rgba(0,0,0,0.45), inset 0 1px 0 #fff, inset 0 -4px 7px rgba(150,170,240,0.4)"></span>
+<input id="sm-reverb" type="range" min="0" max="100" step="5" value="{{reverb}}" onChange="{{setReverb}}" disabled="{{ctlDisabled}}" style="position: absolute; left: 0; top: 0; width: 100%; height: 44px; margin: 0; opacity: 0; cursor: pointer">
+</div>
+<button type="button" onClick="{{reverbUp}}" disabled="{{ctlDisabled}}" aria-label="More reverb" style="flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; margin: 0; background: rgba(255,255,255,0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); color: #F4F4F5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round"><path d="M12 6v12M6 12h12"></path></svg>
+</button>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<div style="min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 14px; font-weight: 500">Link pitch to tempo</span>
+<span style="font-size: 12px; color: #C9C9D1">Pitch drops as it slows, like a record</span>
+</div>
+<button type="button" role="switch" aria-checked="{{linkedStr}}" aria-label="Link pitch to tempo" onClick="{{toggleLinked}}" disabled="{{ctlDisabled}}" style="flex: none; width: 60px; height: 44px; border: 0; padding: 0; margin: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: flex-end">
+<span style="position: relative; display: block; width: 54px; height: 32px; border-radius: 16px; background: {{linkBg}}; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 0 0 1px rgba(255,255,255,0.08); transition: background 160ms ease">
+<span style="position: absolute; top: 2px; left: {{linkKnobLeft}}; width: 28px; height: 28px; border-radius: 50%; background: {{linkKnobBg}}; transition: left 160ms ease"></span>
+</span>
+</button>
+</div>
+
+</div>
+
+<div style="display: flex; overflow-x: auto; scrollbar-width: none; margin: -4px -16px; padding: 0 12px">
+<sc-for list="{{presets}}" as="p" hint-placeholder-count="4">
+<button type="button" onClick="{{p.pick}}" aria-pressed="{{p.pressed}}" style="flex: none; height: 44px; border: 0; padding: 0 4px; margin: 0; background: transparent; font: inherit; cursor: pointer; display: flex; align-items: center">
+<span style="display: flex; align-items: center; height: 34px; padding: 0 14px; border-radius: 17px; backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), inset 0 0 0 1px rgba(255,255,255,0.1); background: {{p.bg}}; color: {{p.fg}}; font-size: 13px; font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums">{{p.label}}</span>
+</button>
+</sc-for>
+</div>
+
+<div style="display: flex; gap: 10px">
+<button type="button" onClick="{{share}}" style="flex: 1; height: 52px; border-radius: 26px; border: 0; padding: 0 16px; margin: 0; background: rgba(185,200,242,0.92); box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 8px 24px rgba(174,191,240,0.25); color: #101014; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px">
+<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><path d="M12 15V4M12 4l-4 4M12 4l4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path></svg>
+<span>{{shareText}}</span>
+</button>
+<button type="button" onClick="{{openSongVersions}}" style="flex: none; height: 52px; border-radius: 26px; border: 0; padding: 0 18px; margin: 0; background: rgba(255,255,255,0.1); backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.32), inset 0 0 0 1px rgba(255,255,255,0.1), 0 6px 18px rgba(0,0,0,0.25); color: #F4F4F5; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center">{{now.vText}}</button>
+</div>
+
+</div>
+</sc-if>
+</section>
+
+</div>
+</sc-if>
+
+<sc-if value="{{hasSheet}}" hint-placeholder-val="{{false}}">
+<div style="position: absolute; inset: 0">
+<button type="button" onClick="{{closeSheet}}" aria-label="Close" style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background: rgba(0,0,0,0.4); cursor: pointer"></button>
+<div role="dialog" aria-label="{{sheet.title}}" style="position: absolute; left: 8px; right: 8px; bottom: 8px; max-height: 560px; overflow-y: auto; scrollbar-width: none; box-sizing: border-box; padding: 10px 16px 20px; border-radius: 36px; background: rgba(28,28,36,0.62); backdrop-filter: blur(40px) saturate(190%); -webkit-backdrop-filter: blur(40px) saturate(190%); border: 1px solid rgba(255,255,255,0.18); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 -20px 60px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 12px">
+<span style="align-self: center; width: 36px; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.25)"></span>
+<div style="display: flex; flex-direction: column; gap: 3px; padding: 4px 4px 0">
+<h2 style="margin: 0; font-size: 17px; font-weight: 600">{{sheet.title}}</h2>
+<span style="font-size: 13px; color: #A3A3AD">{{sheet.sub}}</span>
+</div>
+<div style="border-radius: 20px; background: rgba(255,255,255,0.08); box-shadow: inset 0 1px 0 rgba(255,255,255,0.14); overflow: hidden; display: flex; flex-direction: column">
+<sc-for list="{{sheet.rows}}" as="r" hint-placeholder-count="4">
+<button type="button" onClick="{{r.pick}}" style="display: flex; align-items: center; gap: 12px; width: 100%; min-height: 58px; box-sizing: border-box; padding: 8px 16px; border: 0; border-top: 1px solid {{r.line}}; margin: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.title}}</span>
+<span style="font-size: 12px; color: #A3A3AD; font-variant-numeric: tabular-nums">{{r.sub}}</span>
+</span>
+<sc-if value="{{r.on}}" hint-placeholder-val="{{false}}">
+<svg viewBox="0 0 24 24" width="20" height="20" role="img" aria-label="Selected" style="flex: none; color: #B9C8F2; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+</sc-if>
+</button>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+<div role="status" style="position: absolute; left: 0; right: 0; bottom: {{toastBottom}}; display: flex; justify-content: center; pointer-events: none">
+<span style="display: flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 18px; background: #F4F4F5; color: #101014; font-size: 13px; font-weight: 500; box-shadow: 0 6px 20px rgba(0,0,0,0.5)">{{toast}}</span>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"start":{"editor":"enum","options":["home","search","library","community","artist","versions","player"],"default":"home"},"oled":{"editor":"boolean","default":false},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  state = {
+    screen: null, tab: null, back: 'home', artistBack: 'home', artistId: 'a0',
+    genre: 'All', view: 'list', sort: 'plays',
+    vfilter: 'All', vsort: 'top', songFilter: null,
+    songId: 'a0-0', versionId: null, playing: false, pos: 47, angle: 0,
+    slowOn: false, drawer: false, tempo: 0.85, pitch: -2, reverb: 20, linked: false, oled: null, enter: false, following: {},
+    liked: { 'a0-0-v0': true, 'a1-0-v1': true }, shared: [], toast: '',
+    query: '', scope: 'all', recents: ['Luna Vale', 'late night', 'Paper Lanterns', 'daycore'], lib: 'liked',
+    likedSongs: { 'me-0': true, 'a0-0': true, 'a1-0': true, 'a2-1': true, 'a3-2': true, 'a4-0': true },
+    myPlaylists: [['Morning commute', 24], ['Gym, loud', 31]], shuffle: false, repeat: 'off', sheet: null, output: 'iPhone'
+  };
+
+  setSc = (el) => { this._sc = el; };
+
+  db() {
+    if (this._db) return this._db;
+    const A = [
+      ['Luna Vale', 'Dream Pop', 412, '#17171C', '#F4F4F5', 'Glass Hours|Soft Static|Night Bus Home|Low Tide'],
+      ['Kaito Rivers', 'Indie', 356, '#F1C4DF', '#101014', 'Paper Lanterns|Borrowed Coat|Sundays Only|Northbound'],
+      ['Mara Sol', 'Electronic', 298, '#F4F1EA', '#101014', 'Neon Orchard|Afterimage|Slow Motion Rain|Pulse Garden'],
+      ['Paper Harbor', 'Indie', 241, '#3A3F78', '#F4F4F5', 'Tin Roof|Driftwood Letters|Quiet Engines|Coastline'],
+      ['Noor Elise', 'R&B', 187, '#D2BDB8', '#101014', 'Honey Hour|Call Me Later|Velvet Room|Second Thoughts'],
+      ['Velvet Static', 'Electronic', 164, '#2C2C34', '#F4F4F5', 'Dial Tone|Chrome Summer|Loop Theory|Night Shift'],
+      ['Otis Wren', 'Indie', 131, '#C5D1F6', '#101014', 'Small Hours|Fence Line|Winter Radio|Kettle Song'],
+      ['Sable June', 'Dream Pop', 97, '#F1C4DF', '#101014', 'Blue Hour|Half Asleep|Moth Light|Drift'],
+      ['Halcyon Drive', 'Electronic', 64, '#3A3F78', '#F4F4F5', 'Overpass|Signal Lost|Arcade Sky|Tail Lights'],
+      ['Ines Marlow', 'R&B', 38, '#D2BDB8', '#101014', 'Lavender Smoke|Stay Awhile|Postcards|Last Train']
+    ];
+    const D = [214, 187, 243, 201, 176, 232, 198, 259];
+    const W = [0.36, 0.27, 0.21, 0.16];
+    const H = ['nightbus', 'slowmila', 'tape.hiss', 'dusk.fm', 'halfspeed', 'yuki_k', 'oldcassette', 'reverbia', 'lowtide', 'softclip', 'marzipan', '3amdrive'];
+    const P = [[0.85, -2, 'Daycore', 20], [0.80, -3, 'Late bus home', 35], [0.75, -4, 'Underwater', 60], [0.90, -1, 'Rain on glass', 25], [1.15, 2, 'Nightcore', 0], [0.70, -5, 'Tape melt', 40], [0.88, 0, 'Tempo only', 0], [1.00, -3, 'Pitched down', 10], [1.25, 3, 'Double time', 0]];
+    const AV = [['#B9C8F2', '#101014'], ['#F1C4DF', '#101014'], ['#D2BDB8', '#101014'], ['#2C2C34', '#F4F4F5']];
+    const CNT = [3, 2, 1, 1];
+    const artists = [], songs = {}, versions = [];
+    let n = 0;
+    A.forEach((r, i) => {
+      const id = 'a' + i;
+      const a = { id, rank: i + 1, name: r[0], genre: r[1], plays: r[2], bg: r[3], fg: r[4], initials: r[0].split(' ').map((w) => w[0]).join('').slice(0, 2), songIds: [] };
+      r[5].split('|').forEach((title, si) => {
+        const sid = id + '-' + si;
+        songs[sid] = { id: sid, artistId: id, artist: a.name, title, plays: Math.round(a.plays * W[si]), dur: D[(i * 3 + si) % D.length], idx: si };
+        a.songIds.push(sid);
+        for (let k = 0; k < CNT[si]; k++) {
+          const p = P[(n + k * 4) % P.length];
+          const h = H[(n * 5 + k * 7) % H.length];
+          const plays = 1200 + ((n * 37 + k * 91) % 60) * 310;
+          const av = AV[(n + k) % AV.length];
+          versions.push({ id: sid + '-v' + k, songId: sid, artistId: id, handle: h, initials: h.replace(/[^a-z0-9]/g, '').slice(0, 2).toUpperCase(), tempo: p[0], pitch: p[1], reverb: p[3], name: p[2], plays, likes: Math.round(plays * (0.06 + ((n + k) % 5) * 0.02)), age: 1 + ((n * 3 + k * 11) % 40), abg: av[0], afg: av[1], own: false });
+        }
+        n++;
+      });
+      artists.push(a);
+    });
+    const byId = Object.fromEntries(artists.map((a) => [a.id, a]));
+    byId.me = { id: 'me', rank: 0, name: 'You', genre: 'Original', plays: 0, bg: '#F4F1EA', fg: '#101014', initials: 'YO', songIds: ['me-0', 'me-1'] };
+    songs['me-0'] = { id: 'me-0', artistId: 'me', artist: 'You', title: 'Kitchen Demo 3', plays: 0, dur: 142, idx: 0 };
+    songs['me-1'] = { id: 'me-1', artistId: 'me', artist: 'You', title: 'Rooftop Loop', plays: 0, dur: 96, idx: 1 };
+    this._db = { artists, songs, versions, byId };
+    return this._db;
+  }
+
+  componentDidMount() {
+    this._tick = setInterval(() => {
+      const s = this.state;
+      if (!s.playing) return;
+      const song = this.db().songs[s.songId];
+      const rate = s.slowOn ? s.tempo : 1;
+      let pos = s.pos + 0.25 * rate;
+      if (pos >= song.dur) { if (s.repeat !== 'one') { this.step(1); return; } pos = 0; }
+      this.setState({ pos, angle: s.angle + 0.25 * rate * 48 });
+    }, 250);
+  }
+
+  componentWillUnmount() {
+    clearInterval(this._tick);
+    clearTimeout(this._toastT);
+  }
+
+  cur() {
+    const start = this.props.start ?? 'home';
+    const screen = this.state.screen ?? (start === 'versions' ? 'artist' : start);
+    const tab = this.state.tab ?? (start === 'versions' ? 'versions' : 'songs');
+    return { screen, tab };
+  }
+
+  nav(patch) {
+    const from = this.cur().screen;
+    if (from === 'home' && this._sc) this._homeTop = this._sc.scrollTop;
+    this.setState({ ...patch, enter: true });
+    setTimeout(() => {
+      if (this._sc) this._sc.scrollTop = patch.screen === 'home' ? (this._homeTop || 0) : 0;
+      this.setState({ enter: false });
+    }, 40);
+  }
+
+  flash(toast) {
+    this.setState({ toast });
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(() => this.setState({ toast: '' }), 2200);
+  }
+
+  openArtist(id) {
+    const from = this.cur().screen;
+    this.nav({ screen: 'artist', artistId: id, tab: 'songs', songFilter: null, vfilter: 'All', artistBack: ['home', 'search', 'library', 'community'].includes(from) ? from : this.state.artistBack });
+  }
+
+  playSong(id, open) {
+    const patch = { songId: id, versionId: null, pos: 0, playing: true };
+    if (open) { this.nav({ ...patch, screen: 'player', back: this.cur().screen }); } else { this.setState(patch); }
+  }
+
+  step(dir) {
+    const d = this.db();
+    const ids = d.byId[d.songs[this.state.songId].artistId].songIds;
+    let i = (ids.indexOf(this.state.songId) + dir + ids.length) % ids.length;
+    if (this.state.shuffle) { const at = ids.indexOf(this.state.songId); i = (at + 1 + Math.floor(Math.random() * (ids.length - 1))) % ids.length; }
+    this.setState({ songId: ids[i], versionId: null, pos: 0 });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const d = this.db();
+    const { screen, tab } = this.cur();
+    const oled = s.oled ?? (this.props.oled === true || this.props.oled === 'true');
+    const INK = '#101014', TXT = '#F4F4F5', MUTED = '#A3A3AD', PERI = '#B9C8F2', PINK = '#F1C4DF';
+    const ga = (hex, a) => 'rgba(' + parseInt(hex.slice(1, 3), 16) + ',' + parseInt(hex.slice(3, 5), 16) + ',' + parseInt(hex.slice(5, 7), 16) + ',' + a + ')';
+    const line = (i) => (i === 0 ? 'transparent' : 'rgba(255,255,255,0.06)');
+    const fmt = (sec) => { const t = Math.max(0, Math.round(sec)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+    const kfmt = (v) => (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : String(v));
+    const tfmt = (t) => t.toFixed(2) + '×';
+    const sign = (p) => (p > 0 ? '+' : p < 0 ? '−' : '');
+    const pfmt = (p) => sign(p) + Math.abs(p) + ' st';
+    const chip = (on) => ({ bg: on ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.1)', fg: on ? INK : '#D4D4D8', pressed: on ? 'true' : 'false' });
+    const seg = (on) => ({ bg: on ? 'rgba(255,255,255,0.18)' : 'transparent', fg: on ? TXT : MUTED });
+
+    // ---- Home: bubble cluster (area scales with plays)
+    const max = d.artists[0].plays;
+    const slots = [[150, 70], [62, 52], [92, 132], [20, 118], [160, 148], [200, 14]];
+    const bubbles = d.artists.slice(0, 6).map((a, i) => {
+      const size = Math.round(96 * Math.sqrt(a.plays / max));
+      return { left: (slots[i][0] - size / 2) + 'px', top: (slots[i][1] - size / 2) + 'px', d: size + 'px', fs: (size > 84 ? 20 : size > 68 ? 16 : 14) + 'px', bg: ga(a.bg, 0.84), fg: a.fg, initials: a.initials, label: a.name + ', ' + a.plays + ' plays', open: () => this.openArtist(a.id) };
+    });
+    const more = d.artists.length - 6;
+
+    const top = d.artists[0];
+    const topArtist = { name: top.name, bg: ga(top.bg, 0.86), fg: top.fg, label: top.name + ', your top artist', open: () => this.openArtist(top.id) };
+    const SIM = [['a7', 94, 62, 270], ['a6', 81, 52, 340], ['a8', 77, 60, 30], ['a2', 72, 54, 90], ['a4', 68, 54, 150], ['a9', 63, 52, 200]];
+    const radar = SIM.map((m) => {
+      const a = d.byId[m[0]], th = (m[3] * Math.PI) / 180, cx = 178 + 128 * Math.cos(th), cy = 150 + 96 * Math.sin(th);
+      return { left: (cx - m[2] / 2).toFixed(0) + 'px', top: (cy - m[2] / 2).toFixed(0) + 'px', d: m[2] + 'px', bg: ga(a.bg, 0.84), fg: a.fg, short: a.name.split(' ')[0], label: a.name + ', ' + a.genre + ', ' + m[1] + '% match', open: () => this.openArtist(a.id) };
+    });
+    const V = [['Indie', 37, 60, 58, 92, '#D2BDB8', INK], ['Electronic', 26, 148, 46, 76, PERI, INK], ['Dream Pop', 26, 132, 122, 76, PINK, INK], ['R&B', 11, 62, 134, 50, '#2C2C34', TXT]];
+    const vibes = V.map((g) => ({ name: g[0], pct: g[1] + '%', left: (g[2] - g[4] / 2) + 'px', top: (g[3] - g[4] / 2) + 'px', d: g[4] + 'px', fs: (g[4] > 80 ? 20 : g[4] > 60 ? 15 : 13) + 'px', bg: ga(g[5], 0.86), fg: g[6], ring: 'inset 0 1.5px 1px rgba(255,255,255,0.5), inset 0 -6px 12px rgba(0,0,0,0.14), inset 0 0 0 1px rgba(255,255,255,0.22)' + (s.genre === g[0] ? ', 0 0 0 3px #F4F4F5' : ''), label: g[0] + ' ' + g[1] + '%, filter artists', pick: () => this.setState({ genre: s.genre === g[0] ? 'All' : g[0] }) }));
+
+    // ---- Home: artist directory
+    let list = d.artists.filter((a) => s.genre === 'All' || a.genre === s.genre);
+    list = list.slice().sort((a, b) => (s.sort === 'plays' ? b.plays - a.plays : a.name.localeCompare(b.name)));
+    const artists = list.map((a, i) => ({ name: a.name, initials: a.initials, genre: a.genre, bg: a.bg, fg: a.fg, pillBg: a.genre === 'Indie' ? PERI : 'rgba(255,255,255,0.12)', pillFg: a.genre === 'Indie' ? INK : '#D4D4D8', playsLabel: a.plays + ' plays', barW: Math.max(4, Math.round((a.plays / max) * 100)) + '%', line: line(i), label: a.name + ', ' + a.genre + ', ' + a.plays + ' plays', open: () => this.openArtist(a.id) }));
+    const chips = ['All', 'Indie', 'Electronic', 'Dream Pop', 'R&B'].map((g) => ({ label: g, ...chip(s.genre === g), pick: () => this.setState({ genre: g }) }));
+
+    // ---- Artist detail
+    const A = d.byId[s.artistId];
+    const allV = s.shared.concat(d.versions);
+    const countFor = (sid) => allV.filter((v) => v.songId === sid).length;
+    const artist = { name: A.name, initials: A.initials, genre: A.genre, bg: A.bg, fg: A.fg, meta: A.id === 'me' ? 'Your original uploads' : A.plays + ' plays · #' + A.rank + ' most played', vCount: allV.filter((v) => v.artistId === A.id).length };
+    const songs = A.songIds.map((sid, i) => {
+      const so = d.songs[sid];
+      const dark = A.fg === TXT;
+      return { rank: i + 1, title: so.title, sub: so.plays + ' plays · ' + fmt(so.dur), titleColor: sid === s.songId ? PERI : TXT, coverBg: dark ? 'rgba(255,255,255,0.12)' : A.bg, coverFg: dark ? TXT : INK, line: line(i), label: 'Play ' + so.title, vCount: countFor(sid), vLabel: countFor(sid) + ' community versions of ' + so.title, play: () => this.playSong(sid, true), versions: () => this.nav({ screen: 'artist', tab: 'versions', songFilter: sid, vfilter: 'All' }) };
+    });
+
+    // ---- Community versions (artist tab + global tab share this list)
+    const isArtist = screen === 'artist', isCommunity = screen === 'community';
+    const isLibrary = screen === 'library';
+    let vs = allV;
+    if (isLibrary) vs = vs.filter((v) => s.liked[v.id] || v.own);
+    if (isArtist) vs = vs.filter((v) => v.artistId === A.id);
+    if (isArtist && s.songFilter) vs = vs.filter((v) => v.songId === s.songFilter);
+    const type = (v) => (v.tempo < 1 ? 'Slowed' : v.tempo > 1 ? 'Sped up' : 'Pitch only');
+    if (isLibrary) { /* saved only */ } else if (s.vfilter === 'Liked') vs = vs.filter((v) => s.liked[v.id]);
+    else if (s.vfilter !== 'All') vs = vs.filter((v) => type(v) === s.vfilter);
+    vs = vs.slice().sort((a, b) => (a.own !== b.own ? (a.own ? -1 : 1) : s.vsort === 'top' ? b.plays - a.plays : a.age - b.age));
+    const totalV = vs.length;
+    if (isCommunity) vs = vs.slice(0, 6);
+    const versions = vs.map((v, i) => {
+      const so = d.songs[v.songId];
+      const on = v.id === s.versionId;
+      const liked = !!s.liked[v.id];
+      return {
+        name: v.name, initials: v.initials, abg: v.abg, afg: v.afg,
+        sub: '@' + v.handle + ' · ' + so.title + (isCommunity || isLibrary ? ' — ' + so.artist : ''),
+        tempoLabel: tfmt(v.tempo), tbg: v.tempo > 1 ? PINK : PERI, pitchLabel: pfmt(v.pitch), hasReverb: v.reverb > 0, reverbLabel: v.reverb + '% reverb',
+        playsLabel: kfmt(v.plays) + ' uses', nameColor: on ? PERI : TXT,
+        btnBg: on ? PERI : 'rgba(255,255,255,0.12)', btnFg: on ? INK : TXT, line: line(i),
+        playLabel: 'Play ' + v.name + ' by ' + v.handle + ', ' + tfmt(v.tempo) + ' speed, ' + pfmt(v.pitch),
+        likedStr: liked ? 'true' : 'false', likeLabel: 'Like, ' + (v.likes + (liked ? 1 : 0)) + ' likes',
+        likesLabel: kfmt(v.likes + (liked ? 1 : 0)), heartColor: liked ? PINK : MUTED, heartFill: liked ? PINK : 'none',
+        play: () => this.setState({ songId: v.songId, versionId: v.id, tempo: v.tempo, pitch: v.pitch, reverb: v.reverb, linked: false, slowOn: true, pos: 0, playing: true }),
+        like: () => this.setState({ liked: { ...s.liked, [v.id]: !liked } })
+      };
+    });
+    const vchips = [];
+    if (isArtist && s.songFilter) vchips.push({ label: d.songs[s.songFilter].title + '  ×', bg: PERI, fg: INK, pressed: 'true', pick: () => this.setState({ songFilter: null }) });
+    ['All', 'Slowed', 'Sped up', 'Pitch only', 'Liked'].forEach((f) => vchips.push({ label: f, ...chip(s.vfilter === f), pick: () => this.setState({ vfilter: f }) }));
+    const shown = versions.length;
+    const vCountLabel = (shown < totalV ? 'Top ' + shown + ' of ' + totalV : totalV + (totalV === 1 ? ' preset' : ' presets')) + (s.vsort === 'top' ? ' · most played' : ' · newest');
+
+    // ---- Shared rows, playlists, search, library
+    const PG = 'radial-gradient(120% 90% at 8% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 52%), linear-gradient(145deg, rgba(203,214,248,0.9) 0%, rgba(174,191,240,0.74) 100%)', KG = 'radial-gradient(120% 90% at 8% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 52%), linear-gradient(145deg, rgba(246,211,232,0.9) 0%, rgba(237,185,216,0.74) 100%)';
+    const PL = [['Late Night Drive', 'nightbus', 42, PG, '#101014', '#F4F1EA', 'a0-2', 'late night'], ['Sunday Slow Start', 'marzipan', 28, KG, '#F4F1EA', '#3A3F78', 'a4-0', 'sunday morning'], ['Indie Kitchen', 'yuki_k', 61, '#D2BDB8', '#3A3F78', '#101014', 'a1-0', 'indie'], ['Rainy Window', 'lowtide', 35, '#1E1E23', '#B9C8F2', '#F1C4DF', 'a2-2', 'rainy day']];
+    const playList = (name, sid) => { this.setState({ songId: sid, versionId: null, pos: 0, playing: true }); this.flash('Playing ' + name); };
+    const playV = (v) => this.setState({ songId: v.songId, versionId: v.id, tempo: v.tempo, pitch: v.pitch, reverb: v.reverb, linked: false, slowOn: true, pos: 0, playing: true });
+    const tile = (aid) => { const a = d.byId[aid]; return a.fg === TXT ? { bg: 'rgba(255,255,255,0.12)', fg: TXT } : { bg: a.bg, fg: INK }; };
+    const rows = (arr) => arr.map((o, i) => ({ hasBadge: false, badge: '', badgeBg: 'transparent', badgeFg: TXT, radius: '12px', bg: 'rgba(255,255,255,0.12)', fg: TXT, glyph: '', tag: '', ...o, line: line(i), label: o.title + ', ' + o.sub }));
+    const artistRow = (a) => ({ title: a.name, sub: a.genre + ' · ' + a.plays + ' plays', radius: '50%', bg: a.bg, fg: a.fg, glyph: a.initials, go: () => this.openArtist(a.id) });
+    const src = (x) => (x.artistId === 'me' ? { hasBadge: true, badge: 'Original upload', badgeBg: 'rgba(241,196,223,0.92)', badgeFg: INK } : { hasBadge: true, badge: 'Local file', badgeBg: 'rgba(255,255,255,0.12)', badgeFg: '#D4D4D8' });
+    const songRow = (x) => ({ title: x.title, sub: x.artist, ...tile(x.artistId), ...src(x), go: () => this.playSong(x.id, false) });
+
+    const q = s.query.trim().toLowerCase();
+    const inc = (t) => t.toLowerCase().includes(q);
+    const want = (k) => s.scope === 'all' || s.scope === k;
+    const found = [];
+    if (q) {
+      if (want('artists')) d.artists.filter((a) => inc(a.name) || inc(a.genre)).slice(0, 4).forEach((a) => found.push({ ...artistRow(a), tag: 'Artist' }));
+      if (want('songs')) Object.values(d.songs).filter((x) => inc(x.title) || inc(x.artist)).slice(0, 5).forEach((x) => found.push(songRow(x)));
+      if (want('playlists')) PL.filter((p) => inc(p[0]) || inc(p[7])).forEach((p) => found.push({ title: p[0], sub: '@' + p[1] + ' · Original mix · ' + p[2] + ' min', bg: p[3], tag: 'Mix', go: () => playList(p[0], p[6]) }));
+      if (want('versions')) allV.filter((v) => inc(v.name) || inc(v.handle) || inc(d.songs[v.songId].title) || (q.includes('slow') && v.tempo < 1)).slice(0, 4).forEach((v) => found.push({ title: v.name + ' · ' + d.songs[v.songId].title, sub: '@' + v.handle + ' · ' + tfmt(v.tempo) + ' · ' + pfmt(v.pitch) + (v.reverb ? ' · ' + v.reverb + '% reverb' : ''), radius: '50%', bg: v.abg, fg: v.afg, glyph: v.initials, tag: 'Preset', go: () => playV(v) }));
+    }
+    const results = rows(found);
+    const scopes = [['artists', 'Artists'], ['songs', 'Songs'], ['playlists', 'Mixes'], ['versions', 'Presets']].map((c) => ({ label: c[1], ...chip(s.scope === c[0]), pick: () => this.setState({ scope: s.scope === c[0] ? 'all' : c[0] }) }));
+    const light = 'rgba(16,16,20,0.1)', dim = 'rgba(255,255,255,0.08)';
+    const browse = [['Indie', PG, INK, light], ['Electronic', KG, INK, light], ['Dream Pop', '#D2BDB8', INK, light], ['R&B', '#F4F1EA', INK, light], ['Late night', '#3A3F78', TXT, dim], ['Rainy day', '#C5D1F6', INK, light], ['Sunday morning', '#F1C4DF', INK, light], ['Slowed down', '#17171C', TXT, dim]].map((g) => ({ name: g[0], bg: g[1], fg: g[2], dot: g[3], border: g[2] === TXT ? 'rgba(255,255,255,0.1)' : 'transparent', pick: () => this.setState({ query: g[0] }) }));
+    const recents = s.recents.map((t, i) => ({ text: t, line: line(i), pick: () => this.setState({ query: t }) }));
+
+    const likedIds = Object.keys(s.likedSongs).filter((k) => s.likedSongs[k]);
+    const AL = [['Glass Hours', 'a0', 2025], ['Paper Lanterns', 'a1', 2024], ['Neon Orchard', 'a2', 2025], ['Tin Roof', 'a3', 2023]];
+    const SA = ['a0', 'a1', 'a3', 'a6'];
+    const libPlaylists = s.myPlaylists.map((p) => ({ title: p[0], sub: 'By you · ' + p[1] + (p[1] === 1 ? ' song' : ' songs'), go: () => playList(p[0], 'a1-1') })).concat([{ title: PL[0][0], sub: '@' + PL[0][1] + ' · Original mix', bg: PL[0][3], go: () => playList(PL[0][0], PL[0][6]) }]);
+    const LIB = {
+      liked: likedIds.map((id) => ({ ...songRow(d.songs[id]), tag: fmt(d.songs[id].dur) })),
+      playlists: libPlaylists,
+      albums: AL.map((al) => ({ title: al[0], sub: d.byId[al[1]].name + ' · ' + al[2], ...tile(al[1]), go: () => this.openArtist(al[1]) })),
+      artists: SA.map((id) => artistRow(d.byId[id]))
+    };
+    const libItems = rows(LIB[s.lib]);
+    const libTiles = [['liked', 'Liked Songs', PINK, 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z', 'songs'], ['playlists', 'Playlists', PERI, 'M4 7h13M4 12h9M4 17h7M17 12v7M17 12l3 1', 'playlists'], ['albums', 'Albums', '#D2BDB8', 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z', 'albums'], ['artists', 'Artists', '#F4F1EA', 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM5 20a7 7 0 0 1 14 0', 'saved']].map((t) => ({ name: t[1], bg: t[2], icon: t[3], count: LIB[t[0]].length + ' ' + t[4], border: s.lib === t[0] ? TXT : 'rgba(255,255,255,0.14)', pressed: String(s.lib === t[0]), pick: () => this.setState({ lib: t[0] }) }));
+
+    const TABS = [['home', 'Home', 'M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z'], ['search', 'Search', 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-4-4'], ['library', 'Library', 'M5 4v16M9.5 4v16M14 5l4.5 14.5'], ['community', 'Community', 'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3.5 19a5.5 5.5 0 0 1 11 0M16 5.2a3 3 0 0 1 0 5.6M17.5 14.2a5.5 5.5 0 0 1 3 4.8']];
+    const activeTab = TABS.some((t) => t[0] === screen) ? screen : screen === 'artist' ? s.artistBack : 'home';
+    const tabs = TABS.map((t) => ({ label: t[1], icon: t[2], color: activeTab === t[0] ? TXT : '#C4C4CC', bg: activeTab === t[0] ? 'rgba(255,255,255,0.16)' : 'transparent', glow: activeTab === t[0] ? 'inset 0 1px 0 rgba(255,255,255,0.4), inset 0 0 0 1px rgba(255,255,255,0.08)' : 'none', pressed: String(activeTab === t[0]), go: () => this.nav({ screen: t[0], vfilter: 'All' }) }));
+
+    // ---- Now playing + Slow Mode engine
+    const song = d.songs[s.songId];
+    const ver = s.versionId ? allV.find((v) => v.id === s.versionId) : null;
+    const clampT = (t) => Math.min(1.5, Math.max(0.5, Math.round(t * 100) / 100));
+    const clampP = (p) => Math.min(12, Math.max(-12, p));
+    const linkedPitch = Math.max(-12, Math.min(12, 12 * Math.log2(s.tempo)));
+    const pitchShown = s.linked ? linkedPitch : s.pitch;
+    const rate = s.slowOn ? s.tempo : 1;
+    const effPitch = s.slowOn ? pitchShown : 0;
+    const pitchText = (p, long) => {
+      const abs = Math.abs(p);
+      const num = s.linked ? abs.toFixed(1) : String(abs);
+      return sign(Math.round(p * 10) / 10) + num + (long ? (abs === 1 ? ' semitone' : ' semitones') : ' st');
+    };
+    const slider = (p) => {
+      const lo = Math.min(p, 0.5), w = Math.abs(p - 0.5);
+      return { thumb: 'calc(' + (p * 100).toFixed(2) + '% - ' + (p * 28).toFixed(2) + 'px)', fillLeft: 'calc(14px + ' + (lo * 100).toFixed(2) + '% - ' + (lo * 28).toFixed(2) + 'px)', fillW: 'calc(' + (w * 100).toFixed(2) + '% - ' + (w * 28).toFixed(2) + 'px)' };
+    };
+    const ts = slider(s.tempo - 0.5);
+    const ps = slider((pitchShown + 12) / 24);
+    const seekP = Math.min(1, s.pos / song.dur);
+    const changed = s.slowOn && (s.tempo !== 1 || effPitch !== 0 || s.reverb > 0);
+    let slowCaption = 'Off · playing the original';
+    if (s.slowOn) {
+      const pct = Math.round(Math.abs(1 - s.tempo) * 100);
+      slowCaption = s.tempo === 1 ? 'Original speed · ' + fmt(song.dur) : pct + '% ' + (s.tempo < 1 ? 'slower' : 'faster') + ' · ' + fmt(song.dur) + ' becomes ' + fmt(song.dur / s.tempo);
+    }
+    const setEngine = (patch) => this.setState({ ...patch, versionId: null });
+    const PRE = [['Original', 1, 0, 0], ['Slowed', 0.85, -2, 20], ['Deep', 0.75, -4, 45], ['Sped up', 1.15, 2, 0]];
+    const presets = PRE.map((p) => {
+      const on = s.slowOn && !s.linked && s.tempo === p[1] && s.pitch === p[2] && s.reverb === p[3];
+      return { label: p[1] === 1 ? p[0] : p[0] + ' ' + tfmt(p[1]), ...chip(on), pick: () => setEngine({ slowOn: true, linked: false, tempo: p[1], pitch: p[2], reverb: p[3] }) };
+    });
+    const pitchRounded = Math.round(pitchShown);
+    const isShared = s.shared.some((v) => v.songId === song.id && v.tempo === s.tempo && v.pitch === pitchRounded && v.reverb === s.reverb);
+    const songVCount = countFor(song.id);
+    const now = {
+      title: song.title, artist: song.artist, dur: song.dur,
+      subtitle: song.artist + (ver ? ' · ' + ver.name + ' by @' + ver.handle : song.artistId === 'me' ? ' · Original upload' : ' · Local file'),
+      miniSub: song.artist + (ver ? ' · @' + ver.handle : ''),
+      vLabel: songVCount + ' community presets for this song',
+      vText: songVCount + (songVCount === 1 ? ' preset' : ' presets')
+    };
+
+    const closeSheet = () => this.setState({ sheet: null });
+    let sheet = { title: '', sub: '', rows: [] };
+    if (s.sheet === 'queue') {
+      const ids = d.byId[song.artistId].songIds, at = ids.indexOf(song.id);
+      const up = ids.slice(at + 1).concat(ids.slice(0, at));
+      sheet = { title: 'Up next', sub: (s.shuffle ? 'Shuffled · ' : '') + 'From ' + song.artist, rows: up.map((id) => ({ title: d.songs[id].title, sub: song.artist + ' · ' + fmt(d.songs[id].dur), on: false, pick: () => this.setState({ songId: id, versionId: null, pos: 0, playing: true, sheet: null }) })) };
+    } else if (s.sheet === 'output') {
+      sheet = { title: 'Audio output', sub: 'Choose where this plays', rows: [['iPhone', 'This device'], ['AirPods Pro', 'Bluetooth'], ['Living Room', 'AirPlay speaker'], ['MacBook Air', 'AirPlay']].map((o) => ({ title: o[0], sub: o[1], on: s.output === o[0], pick: () => this.setState({ output: o[0], sheet: null }) })) };
+    } else if (s.sheet === 'import') {
+      const pick = (msg) => () => { this.setState({ sheet: null }); this.flash(msg); };
+      sheet = { title: 'Import or upload audio', sub: 'Tracks stay on this iPhone unless you publish an original', rows: [{ title: 'Import from Files', sub: 'MP3, AAC, FLAC, WAV from Files or iCloud Drive', on: false, pick: pick('Opens the Files picker') }, { title: 'Upload an original', sub: 'Your own recordings and mixes, shareable with the community', on: false, pick: pick('Opens the upload flow') }] };
+    } else if (s.sheet === 'add') {
+      const addTo = (i) => { const next = s.myPlaylists.map((p, k) => (k === i ? [p[0], p[1] + 1] : p)); this.setState({ myPlaylists: next, sheet: null }); this.flash('Added to ' + s.myPlaylists[i][0]); };
+      sheet = { title: 'Add to playlist', sub: song.title + ' · ' + song.artist, rows: s.myPlaylists.map((p, i) => ({ title: p[0], sub: p[1] + (p[1] === 1 ? ' song' : ' songs'), on: false, pick: () => addTo(i) })).concat([{ title: 'New playlist', sub: 'Create one with this song', on: false, pick: () => { const name = 'New playlist ' + (s.myPlaylists.length - 1); this.setState({ myPlaylists: s.myPlaylists.concat([[name, 1]]), sheet: null }); this.flash('Added to ' + name); } }]) };
+    }
+    sheet.rows = sheet.rows.map((r, i) => ({ ...r, line: line(i) }));
+    const songLiked = !!s.likedSongs[song.id];
+    const RP = 'M5 12V9a3 3 0 0 1 3-3h10M15 3l3 3-3 3M19 12v3a3 3 0 0 1-3 3H6M9 21l-3-3 3-3';
+
+    return {
+      isSearch: screen === 'search', isLibrary, showVFilters: !isLibrary, tabs,
+      query: s.query, hasQuery: !!q, noQuery: !q, setQuery: (e) => this.setState({ query: e.target.value }), clearQuery: () => this.setState({ query: '' }),
+      scopes, browse, recents, hasRecents: recents.length > 0, clearRecents: () => this.setState({ recents: [] }),
+      results, hasResults: !!q && results.length > 0, noResults: !!q && results.length === 0,
+      libTiles, libItems, hasLibItems: libItems.length > 0, noLibItems: libItems.length === 0,
+      createPlaylist: () => { const name = 'New playlist ' + (s.myPlaylists.length - 1); this.setState({ myPlaylists: s.myPlaylists.concat([[name, 0]]), lib: 'playlists' }); this.flash(name + ' created'); },
+      hasSheet: !!s.sheet, openImport: () => this.setState({ sheet: 'import' }), sheet, closeSheet,
+      openQueue: () => this.setState({ sheet: 'queue' }), openOutput: () => this.setState({ sheet: 'output' }), openAdd: () => this.setState({ sheet: 'add' }),
+      output: s.output, outputLabel: 'Audio output, ' + s.output,
+      toggleLikeSong: () => { this.setState({ likedSongs: { ...s.likedSongs, [song.id]: !songLiked } }); this.flash(songLiked ? 'Removed from Liked Songs' : 'Added to Liked Songs'); },
+      songLikedStr: String(songLiked), songHeartColor: songLiked ? PINK : TXT, songHeartFill: songLiked ? PINK : 'none',
+      toggleShuffle: () => this.setState({ shuffle: !s.shuffle }), shuffleStr: String(s.shuffle), shuffleColor: s.shuffle ? PERI : MUTED, shuffleDot: s.shuffle ? '1' : '0',
+      cycleRepeat: () => this.setState({ repeat: s.repeat === 'off' ? 'all' : s.repeat === 'all' ? 'one' : 'off' }),
+      repeatStr: String(s.repeat !== 'off'), repeatColor: s.repeat !== 'off' ? PERI : MUTED, repeatDot: s.repeat !== 'off' ? '1' : '0',
+      repeatIcon: s.repeat === 'one' ? RP + 'M11 10.5l1.5-1v5' : RP, repeatLabel: s.repeat === 'one' ? 'Repeat one' : s.repeat === 'all' ? 'Repeat all' : 'Repeat off',
+      toastBottom: screen === 'player' ? '44px' : '178px',
+      oledStr: String(oled), oledColor: oled ? PERI : TXT, oledFill: oled ? PERI : 'none', toggleOled: () => this.setState({ oled: !oled }),
+      rootBg: oled ? '#000000' : '#08080A', regBg: oled ? 'rgba(255,255,255,0.04)' : 'rgba(24,24,30,0.58)', barBg: oled ? 'rgba(0,0,0,0.6)' : 'rgba(22,22,28,0.7)',
+      fadeBg: oled ? 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)' : 'linear-gradient(to top, rgba(8,8,10,0.7) 0%, rgba(8,8,10,0) 100%)',
+      enterOpacity: s.enter ? '0' : '1', enterShift: s.enter ? 'translateY(14px)' : 'none', enterTransition: s.enter ? 'none' : 'opacity 260ms ease, transform 260ms ease',
+      reverb: s.reverb, reverbReadout: s.reverb + '%',
+      reverbThumbLeft: 'calc(' + s.reverb + '% - ' + (s.reverb * 0.28).toFixed(2) + 'px)', reverbFillW: 'calc(14px + ' + s.reverb + '% - ' + (s.reverb * 0.28).toFixed(2) + 'px)',
+      setReverb: (e) => setEngine({ reverb: Number(e.target.value) }),
+      reverbDown: () => setEngine({ reverb: Math.max(0, s.reverb - 5) }), reverbUp: () => setEngine({ reverb: Math.min(100, s.reverb + 5) }),
+      ambA: screen === 'player' ? (oled ? '0.34' : '0.4') : oled ? '0.07' : '0.18', ambB: screen === 'player' ? (oled ? '0.24' : '0.32') : oled ? '0.05' : '0.14', ambC: screen === 'player' ? (oled ? '0.3' : '0.6') : oled ? '0.1' : '0.38',
+      ambAx: (28 * Math.sin(s.angle * Math.PI / 1080)).toFixed(1) + 'px, ' + (22 * Math.cos(s.angle * Math.PI / 1080)).toFixed(1) + 'px',
+      ambBx: (-26 * Math.sin(s.angle * Math.PI / 1080)).toFixed(1) + 'px, ' + (-20 * Math.cos(s.angle * Math.PI / 1080)).toFixed(1) + 'px',
+      showMain: screen !== 'player', isHome: screen === 'home', isArtist, isCommunity, isPlayer: screen === 'player',
+      showSongs: isArtist && tab === 'songs', showVersions: isCommunity || isLibrary || (isArtist && tab === 'versions'),
+      setSc: this.setSc,
+      radar, topArtist, vibes,
+      vTop: isCommunity || isLibrary ? '4px' : '14px',
+      playlists: PL.map((p) => ({ name: p[0], sub: '@' + p[1] + ' · ' + p[2] + ' min', bg: p[3], c1: p[4], c2: p[5], label: 'Play mix ' + p[0], play: () => playList(p[0], p[6]) })),
+      listeners: [['Mila', 92, PERI, INK], ['Yuki', 88, PINK, INK], ['Dario', 81, '#D2BDB8', INK], ['Noa', 77, '#2C2C34', TXT]].map((u) => { const on = !!s.following[u[0]]; return { name: u[0], initials: u[0].slice(0, 2).toUpperCase(), match: u[1] + '% taste match', bg: u[2], fg: u[3], pressed: String(on), label: (on ? 'Unfollow ' : 'Follow ') + u[0], btnText: on ? 'Following' : 'Follow', btnBg: on ? 'rgba(255,255,255,0.12)' : TXT, btnFg: on ? '#D4D4D8' : INK, follow: () => this.setState({ following: { ...s.following, [u[0]]: !on } }) }; }),
+      showAllArtists: () => { if (this._sc) this._sc.scrollTo({ top: 620, behavior: 'smooth' }); },
+      countLabel: list.length + ' artists · ' + (s.sort === 'plays' ? 'sorted by plays' : 'A to Z'),
+      sortLabel: s.sort === 'plays' ? 'Sort A to Z' : 'Sort by plays',
+      toggleSort: () => this.setState({ sort: s.sort === 'plays' ? 'az' : 'plays' }),
+      isList: s.view === 'list', isGrid: s.view === 'grid',
+      setList: () => this.setState({ view: 'list' }), setGrid: () => this.setState({ view: 'grid' }),
+      listBg: seg(s.view === 'list').bg, listFg: seg(s.view === 'list').fg, listPressed: String(s.view === 'list'),
+      gridBg: seg(s.view === 'grid').bg, gridFg: seg(s.view === 'grid').fg, gridPressed: String(s.view === 'grid'),
+      chips, artists,
+
+      artist, songs,
+      backFromArtist: () => this.nav({ screen: s.artistBack }),
+      playTop: () => this.playSong(A.songIds[0], false),
+      tabSongs: () => this.setState({ tab: 'songs' }), tabVersions: () => this.setState({ tab: 'versions' }),
+      songsBg: seg(tab === 'songs').bg, songsFg: seg(tab === 'songs').fg, songsPressed: String(tab === 'songs'),
+      versBg: seg(tab === 'versions').bg, versFg: seg(tab === 'versions').fg, versPressed: String(tab === 'versions'),
+
+      versions, vchips, vCountLabel, hasVersions: shown > 0, noVersions: shown === 0,
+      vSortLabel: s.vsort === 'top' ? 'Popular' : 'Newest',
+      toggleVSort: () => this.setState({ vsort: s.vsort === 'top' ? 'new' : 'top' }),
+
+      now, playing: s.playing, paused: !s.playing, playLabel: s.playing ? 'Pause' : 'Play',
+      togglePlay: () => this.setState({ playing: !s.playing }),
+      openPlayer: () => this.nav({ screen: 'player', back: screen }),
+      closePlayer: () => this.nav({ screen: s.back, sheet: null }),
+      openSongVersions: () => this.nav({ screen: 'artist', artistId: song.artistId, tab: 'versions', songFilter: song.id, vfilter: 'All', artistBack: 'home' }),
+      prev: () => this.step(-1), next: () => this.step(1),
+      progressPct: (seekP * 100).toFixed(1) + '%',
+      angle: s.angle.toFixed(1) + 'deg',
+      posInt: Math.round(s.pos),
+      seek: (e) => this.setState({ pos: Number(e.target.value) }),
+      seekFillW: 'calc(7px + ' + (seekP * 100).toFixed(2) + '% - ' + (seekP * 14).toFixed(2) + 'px)',
+      seekThumbLeft: 'calc(' + (seekP * 100).toFixed(2) + '% - ' + (seekP * 14).toFixed(2) + 'px)',
+      elapsed: fmt(s.pos / rate), total: fmt(song.dur / rate),
+      badgeText: changed ? tfmt(s.tempo) + ' · ' + pitchText(effPitch, false) : 'Original',
+      badgeBg: changed ? PERI : '#1E1E23', badgeFg: changed ? INK : '#D4D4D8',
+
+      slowOn: s.slowOn, changed,
+      drawerOpen: s.drawer, drawerStr: String(s.drawer), drawerLabel: s.drawer ? 'Hide Slow Mode controls' : 'Show Slow Mode controls',
+      chevRot: s.drawer ? '180deg' : '0deg', artSize: s.drawer ? '168px' : '300px',
+      drawerCaption: !s.slowOn ? 'Off' : s.drawer ? slowCaption : tfmt(s.tempo) + ' · ' + pitchText(pitchShown, false) + (s.reverb ? ' · ' + s.reverb + '% reverb' : ''),
+      toggleDrawer: () => this.setState({ drawer: !s.drawer }),
+      toggleSlowPlayer: () => this.setState({ slowOn: !s.slowOn, drawer: !s.slowOn ? true : s.drawer }),
+      slowOnStr: String(s.slowOn), slowCaption,
+      toggleSlow: () => this.setState({ slowOn: !s.slowOn }),
+      slowPillBg: s.slowOn ? PERI : 'rgba(255,255,255,0.18)', slowPillFg: s.slowOn ? INK : '#D4D4D8',
+      slowPillText: s.slowOn ? tfmt(s.tempo) : 'Slow',
+      switchBg: s.slowOn ? PERI : 'rgba(255,255,255,0.16)', knobLeft: s.slowOn ? '24px' : '2px', knobBg: s.slowOn ? INK : TXT,
+      ctlOpacity: s.slowOn ? '1' : '0.4', ctlDisabled: !s.slowOn,
+      tempo: s.tempo, tempoReadout: tfmt(s.tempo) + ' speed',
+      tempoThumbLeft: ts.thumb, tempoFillLeft: ts.fillLeft, tempoFillW: ts.fillW,
+      setTempo: (e) => setEngine({ tempo: clampT(Number(e.target.value)) }),
+      tempoDown: () => setEngine({ tempo: clampT(s.tempo - 0.01) }),
+      tempoUp: () => setEngine({ tempo: clampT(s.tempo + 0.01) }),
+      pitchInt: pitchRounded,
+      pitchReadout: pitchText(pitchShown, true),
+      pitchThumbLeft: ps.thumb, pitchFillLeft: ps.fillLeft, pitchFillW: ps.fillW,
+      pitchDisabled: !s.slowOn || s.linked, pitchOpacity: s.linked ? '0.45' : '1',
+      setPitch: (e) => setEngine({ pitch: clampP(Number(e.target.value)) }),
+      pitchDown: () => setEngine({ pitch: clampP(s.pitch - 1) }),
+      pitchUp: () => setEngine({ pitch: clampP(s.pitch + 1) }),
+      linkedStr: String(s.linked),
+      toggleLinked: () => setEngine({ linked: !s.linked, pitch: s.linked ? pitchRounded : s.pitch }),
+      linkBg: s.linked ? PINK : 'rgba(255,255,255,0.16)', linkKnobLeft: s.linked ? '24px' : '2px', linkKnobBg: s.linked ? INK : TXT,
+      presets,
+      shareText: isShared ? 'Shared' : 'Share preset',
+      share: () => {
+        if (isShared) return;
+        const id = 'own-' + (s.shared.length + 1) + '-' + song.id;
+        this.setState({ shared: [{ id, songId: song.id, artistId: song.artistId, handle: 'you', initials: 'YO', tempo: s.tempo, pitch: pitchRounded, name: 'Your preset', reverb: s.reverb, plays: 0, likes: 0, age: 0, abg: '#F4F4F5', afg: INK, own: true }].concat(s.shared), versionId: id });
+        this.flash('Preset shared. Settings only, no audio');
+      },
+
+      hasToast: !!s.toast, toast: s.toast
+};
+  }
+}
+</script>
+</body>
+</html>

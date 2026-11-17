@@ -1,0 +1,44 @@
+# Definición del proyecto para XcodeGen. El .xcodeproj no se versiona:
+# se genera en GitHub Actions (y en cualquier Mac) con `xcodegen generate`.
+name: SlowMode
+options:
+  bundleIdPrefix: com.slowmode
+  deploymentTarget:
+    iOS: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  SlowMode:
+    type: application
+    platform: iOS
+    sources: [SlowMode]
+    info:
+      path: SlowMode/Info.plist
+      properties:
+        CFBundleDisplayName: Slow Mode
+        UILaunchScreen: {}
+        UIBackgroundModes: [audio]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.slowmode.app
+        TARGETED_DEVICE_FAMILY: "1"
+  SlowModeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [SlowModeTests]
+    dependencies:
+      - target: SlowMode
+schemes:
+  SlowMode:
+    build:
+      targets:
+        SlowMode: all
+        SlowModeTests: [test]
+    test:
+      targets: [SlowModeTests]
