@@ -5,11 +5,13 @@ struct RootView: View {
     @State private var catalogStore: CatalogStore = CatalogStore()
     @State private var library: LibraryStore = LibraryStore()
     @State private var localLibrary: LocalLibrary
+    @State private var presetStore: PresetStore
     @State private var player: PlayerController
     @State private var navigation: AppNavigation = AppNavigation()
 
     init(container: ModelContainer) {
         _localLibrary = State(initialValue: LocalLibrary(context: container.mainContext))
+        _presetStore = State(initialValue: PresetStore(context: container.mainContext))
         _player = State(initialValue: PlayerController(engine: AudioEngineService(), nowPlaying: NowPlayingService()))
     }
 
@@ -19,6 +21,7 @@ struct RootView: View {
                 .environment(catalogStore)
                 .environment(library)
                 .environment(localLibrary)
+                .environment(presetStore)
                 .environment(player)
                 .environment(navigation)
                 .task {

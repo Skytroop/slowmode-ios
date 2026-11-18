@@ -30,6 +30,19 @@ enum SlowModeFormat {
         return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
+    /// 0.85 → "Ralentizado", 1.15 → "Acelerado", 1 → "Solo tono"
+    static func modeName(tempo: Double) -> String {
+        if tempo < 0.995 { return "Ralentizado" }
+        if tempo > 1.005 { return "Acelerado" }
+        return "Solo tono"
+    }
+
+    /// Etiqueta de la portada: "Ralentizado · 0.85× · −2 st". `nil` si Slow Mode está desactivado o no cambia nada.
+    static func badge(for settings: SlowSettings) -> String? {
+        guard let summary = settings.summary else { return nil }
+        return "\(modeName(tempo: settings.tempo)) · \(summary)"
+    }
+
     /// 214 → "3:34"
     static func duration(_ seconds: Double) -> String {
         let total: Int = max(0, Int(seconds.rounded()))

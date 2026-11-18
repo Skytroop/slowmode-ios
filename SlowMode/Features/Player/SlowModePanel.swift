@@ -6,14 +6,24 @@ struct SlowModePanel: View {
     let trackDuration: Double
     let presetCount: Int
     let onShowPresets: () -> Void
+    /// Se llama con el nombre del preset recién guardado.
+    var onSaved: (String) -> Void = { _ in }
 
     @Environment(PlayerController.self) private var player: PlayerController
+    @Environment(PresetStore.self) private var presetStore: PresetStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion: Bool
     @State private var showsShareInfo: Bool = false
+    @State private var isNamingPreset: Bool = false
+    @State private var presetName: String = ""
 
     private var summaryText: String {
         guard player.slow.isEnabled else { return "Desactivado" }
         return player.slow.summary ?? "Sin cambios"
+    }
+
+    private var myPresets: [SlowPreset] {
+        guard let track = player.currentTrack else { return [] }
+        return presetStore.presets(for: track)
     }
 
     var body: some View {
@@ -26,10 +36,48 @@ struct SlowModePanel: View {
         }
         .padding(16)
         .glassEffect(.regular, in: .rect(cornerRadius: Radius.card))
-        .alert("Compartir preset", isPresented: $showsShareInfo) {
-            Button("Entendido", role: .cancel) {}
+        .alert("Guardar preset", isPresented: $isNamingPreset) {
+            TextField("Nombre", text: $presetName)
+            Button("Guardar") { savePreset() }
+            Button("Cancelar", role: .cancel) {}
         } message: {
-            Text("Se compartirán solo los ajustes (\(summaryText)) y el título y artista de la pista, nunca el audio. Llega en la Fase 4.")
+            Text("Se guardan los ajustes (\(summaryText)) para «\(player.currentTrack?.title ?? "")».")
+        }
+    }
+
+    private func savePreset() {
+        guard let track = player.currentTrack,
+              let saved = presetStore.save(name: presetName, settings: player.slow, for: track) else { return }
+        onSaved(saved.name)
+    }
+
+    /// Presets guardados para la canción que suena. Tocar uno aplica sus ajustes; mantener pulsado, eliminar.
+    @ViewBuilder
+    private var myPresetChips: some View {
+        let presets: [SlowPreset] = myPresets
+        if !presets.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Tus presets")
+                    .textStyle(.caption)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    GlassEffectContainer(spacing: 8) {
+                        HStack(spacing: 8) {
+                            ForEach(presets) { preset in
+                                Chip(title: preset.name, isSelected: player.slow == preset.settings) {
+                                    player.slow = preset.settings
+                                }
+                                .contextMenu {
+                                    Button(role: .destructive) {
+                                        presetStore.delete(preset)
+                                    } label: {
+                                        Label("Eliminar preset", systemImage: "trash")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -154,15 +202,37 @@ struct SlowModePanel: View {
             .disabled(!player.slow.isEnabled)
             .opacity(player.slow.isEnabled ? 1 : 0.5)
 
-            HStack(spacing: 12) {
+            myPresetChips
+
+            HStack(spacing: 8) {
+                Button {
+                    presetName = PresetStore.suggestedName(for: player.slow)
+                    isNamingPreset = true
+                } label: {
+                    Label("Guardar", systemImage: "bookmark")
+                        .foregroundStyle(Palette.ink)
+                        .frame(minHeight: 36)
+                }
+                .buttonStyle(.glassProminent)
+                .tint(Palette.periwinkle)
+                .disabled(player.slow.summary == nil)
+                .accessibilityLabel("Guardar preset")
+                .accessibilityHint("Guarda estos ajustes para esta canción")
+
                 Button {
                     showsShareInfo = true
                 } label: {
-                    Label("Compartir preset", systemImage: "square.and.arrow.up")
-                        .frame(minHeight: 36)
+                    Image(systemName: "square.and.arrow.up")
+                        .frame(width: 36, height: 36)
                 }
                 .buttonStyle(.glass)
-                .disabled(!player.slow.isEnabled)
+                .disabled(player.slow.summary == nil)
+                .accessibilityLabel("Compartir preset")
+                .alert("Compartir preset", isPresented: $showsShareInfo) {
+                    Button("Entendido", role: .cancel) {}
+                } message: {
+                    Text("Se compartirán solo los ajustes (\(summaryText)) y el título y artista de la pista, nunca el audio. Compartir con la comunidad llega más adelante; de momento usa Guardar.")
+                }
 
                 Spacer(minLength: 0)
 

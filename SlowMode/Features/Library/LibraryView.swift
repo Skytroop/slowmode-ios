@@ -30,6 +30,7 @@ struct LibraryView: View {
     @Environment(CatalogStore.self) private var store: CatalogStore
     @Environment(LibraryStore.self) private var library: LibraryStore
     @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
+    @Environment(PresetStore.self) private var presetStore: PresetStore
     @Environment(PlayerController.self) private var player: PlayerController
     @Environment(AppNavigation.self) private var navigation: AppNavigation
     @State private var tile: LibraryTile = .liked
@@ -63,11 +64,12 @@ struct LibraryView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     SectionHeader(title: "Presets de Slow Mode guardados")
                     PresetListSection(
-                        presets: catalog.presets.filter { library.isLiked(presetId: $0.id) },
+                        presets: presetStore.communityPresets + catalog.presets.filter { library.isLiked(presetId: $0.id) },
                         showsArtist: true,
                         showsControls: false,
                         emptyTitle: "Sin presets guardados",
-                        emptyMessage: "Dale a me gusta a un preset de la comunidad para guardarlo aquí."
+                        emptyMessage: "Guarda tu versión desde el panel de Slow Mode o dale a me gusta a un preset de la comunidad.",
+                        onDelete: { preset in presetStore.delete(presetId: preset.id) }
                     )
                 }
             }

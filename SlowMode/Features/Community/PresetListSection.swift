@@ -88,6 +88,8 @@ struct PresetListSection: View {
     var showsControls: Bool = true
     var emptyTitle: String = "Sin presets"
     var emptyMessage: String = "Todavía no hay presets que coincidan."
+    /// Si se indica, los presets propios se pueden eliminar manteniendo pulsado.
+    var onDelete: ((CommunityPreset) -> Void)? = nil
 
     @Environment(CatalogStore.self) private var store: CatalogStore
     @Environment(LibraryStore.self) private var library: LibraryStore
@@ -119,6 +121,15 @@ struct PresetListSection: View {
                         onPlay: { play(preset) },
                         onLike: { library.toggleLike(presetId: preset.id) }
                     )
+                    .contextMenu {
+                        if let onDelete, preset.id.hasPrefix(MinePresetID.prefix) {
+                            Button(role: .destructive) {
+                                onDelete(preset)
+                            } label: {
+                                Label("Eliminar preset", systemImage: "trash")
+                            }
+                        }
+                    }
                 }
             }
         }

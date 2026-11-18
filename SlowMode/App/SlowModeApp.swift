@@ -7,12 +7,12 @@ struct SlowModeApp: App {
 
     init() {
         do {
-            container = try ModelContainer(for: Track.self)
+            container = try ModelContainer(for: Track.self, SlowPreset.self)
         } catch {
             // Si el almacén no se puede abrir, la app arranca igualmente (sin guardar entre sesiones).
             let memory = ModelConfiguration(isStoredInMemoryOnly: true)
             // swiftlint:disable:next force_try
-            container = try! ModelContainer(for: Track.self, configurations: memory)
+            container = try! ModelContainer(for: Track.self, SlowPreset.self, configurations: memory)
         }
     }
 
