@@ -1,16 +1,24 @@
+import SwiftData
 import SwiftUI
 
 struct RootView: View {
     @State private var catalogStore: CatalogStore = CatalogStore()
     @State private var library: LibraryStore = LibraryStore()
-    @State private var player: PlayerController = PlayerController()
+    @State private var localLibrary: LocalLibrary
+    @State private var player: PlayerController
     @State private var navigation: AppNavigation = AppNavigation()
+
+    init(container: ModelContainer) {
+        _localLibrary = State(initialValue: LocalLibrary(context: container.mainContext))
+        _player = State(initialValue: PlayerController(engine: AudioEngineService(), nowPlaying: NowPlayingService()))
+    }
 
     var body: some View {
         ThemedRoot {
             content
                 .environment(catalogStore)
                 .environment(library)
+                .environment(localLibrary)
                 .environment(player)
                 .environment(navigation)
                 .task {
@@ -42,8 +50,22 @@ struct RootView: View {
     }
 
     private func load() {
+        let localLibrary: LocalLibrary = localLibrary
+        player.fileURLProvider = { track in localLibrary.fileURL(for: track.id) }
+        player.artworkProvider = { track in localLibrary.artwork(for: track.id) }
         catalogStore.load()
-        player.prepareIfIdle(with: catalogStore.catalog)
+
+        // Si tienes música importada, el minirreproductor arranca con ella; si no, con los datos de ejemplo.
+        if !localLibrary.tracks.isEmpty {
+            player.prepareIfIdle(with: localLibrary.catalogTracks, source: "Tu música")
+        } else {
+            let catalog: SampleCatalog = catalogStore.catalog
+            let artistId: String = catalog.home.discover.centerArtistId
+            player.prepareIfIdle(
+                with: catalog.tracks(byArtist: artistId),
+                source: catalog.artist(id: artistId)?.name ?? ""
+            )
+        }
     }
 }
 
@@ -52,8 +74,4 @@ enum AppInfo {
     static var version: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
     }
-}
-
-#Preview {
-    RootView()
 }

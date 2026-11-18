@@ -91,6 +91,7 @@ struct PresetListSection: View {
 
     @Environment(CatalogStore.self) private var store: CatalogStore
     @Environment(LibraryStore.self) private var library: LibraryStore
+    @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
     @Environment(PlayerController.self) private var player: PlayerController
     @Environment(AppNavigation.self) private var navigation: AppNavigation
     @State private var filter: PresetFilter = .all
@@ -104,7 +105,7 @@ struct PresetListSection: View {
 
         VStack(alignment: .leading, spacing: 12) {
             if showsControls {
-                controls
+                controls(count: shown.count)
             }
             if shown.isEmpty {
                 ContentUnavailableView(emptyTitle, systemImage: "slider.horizontal.3", description: Text(emptyMessage))
@@ -136,8 +137,37 @@ struct PresetListSection: View {
         }
     }
 
-    private var controls: some View {
-        HStack(spacing: 8) {
+    /// Orden en su propia fila (a la derecha) y chips de filtro a todo el ancho debajo.
+    private func controls(count: Int) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(count == 1 ? "1 preset" : "\(count) presets")
+                    .textStyle(.caption)
+                    .monospacedDigit()
+                Spacer(minLength: 8)
+                Menu {
+                    Picker("Orden", selection: $sort) {
+                        ForEach(PresetSort.allCases) { option in
+                            Text(option.title).tag(option)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.up.arrow.down")
+                        Text(sort.title)
+                    }
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Palette.textPrimary)
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 36)
+                    .glassEffect(.regular.interactive(), in: .capsule)
+                    .padding(.vertical, 4)
+                    .contentShape(.rect)
+                }
+                .accessibilityLabel("Ordenar")
+                .accessibilityValue(sort.title)
+            }
+
             ScrollView(.horizontal, showsIndicators: false) {
                 GlassEffectContainer(spacing: 8) {
                     HStack(spacing: 8) {
@@ -149,28 +179,11 @@ struct PresetListSection: View {
                     }
                 }
             }
-            .scrollClipDisabled()
-
-            Menu {
-                Picker("Orden", selection: $sort) {
-                    ForEach(PresetSort.allCases) { option in
-                        Text(option.title).tag(option)
-                    }
-                }
-            } label: {
-                Image(systemName: "arrow.up.arrow.down")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Palette.textPrimary)
-                    .frame(width: 44, height: 44)
-            }
-            .glassEffect(.regular.interactive(), in: .circle)
-            .accessibilityLabel("Ordenar")
-            .accessibilityValue(sort.title)
         }
     }
 
     private func play(_ preset: CommunityPreset) {
-        if let track = store.catalog.localTrack(for: preset) {
+        if let track = localLibrary.match(preset.track) ?? store.catalog.localTrack(for: preset) {
             player.apply(preset, to: track)
         } else {
             missingPreset = preset

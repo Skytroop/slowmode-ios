@@ -18,6 +18,7 @@ struct RoutePickerButton: UIViewRepresentable {
 struct QueueSheet: View {
     @Environment(PlayerController.self) private var player: PlayerController
     @Environment(CatalogStore.self) private var store: CatalogStore
+    @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -62,7 +63,8 @@ struct QueueSheet: View {
             subtitle: track.artist,
             artwork: ArtworkColors.forArtist(track.artistId, in: store.catalog),
             trailing: SlowModeFormat.duration(Double(track.duration)),
-            isCurrent: player.currentTrack?.id == track.id
+            isCurrent: player.currentTrack?.id == track.id,
+            image: localLibrary.artwork(for: track.id)
         )
     }
 }

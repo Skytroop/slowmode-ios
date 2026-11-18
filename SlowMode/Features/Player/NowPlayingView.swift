@@ -5,6 +5,7 @@ struct NowPlayingView: View {
     @Environment(PlayerController.self) private var player: PlayerController
     @Environment(CatalogStore.self) private var store: CatalogStore
     @Environment(LibraryStore.self) private var library: LibraryStore
+    @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion: Bool
     @State private var isPanelExpanded: Bool = false
@@ -26,7 +27,12 @@ struct NowPlayingView: View {
                 ScrollView {
                     VStack(spacing: 22) {
                         topBar
-                        TrackArtwork(colors: colors, size: isPanelExpanded ? 168 : 300, cornerRadius: Radius.card)
+                        TrackArtwork(
+                            colors: colors,
+                            image: localLibrary.artwork(for: track.id),
+                            size: isPanelExpanded ? 168 : 300,
+                            cornerRadius: Radius.card
+                        )
                             .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
                             .animation(reduceMotion ? nil : .spring(duration: 0.45), value: isPanelExpanded)
                         titleBlock(track)

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Colores de una portada o avatar.
 struct ArtworkColors: Equatable {
@@ -20,18 +21,28 @@ struct ArtworkColors: Equatable {
     }
 }
 
-/// Portada cuadrada de una pista (color del artista + nota). Las portadas reales llegan en la Fase 3.
+/// Portada cuadrada de una pista: la imagen del archivo si la tiene; si no, color del artista + nota.
 struct TrackArtwork: View {
     let colors: ArtworkColors
+    var image: UIImage? = nil
     var size: CGFloat = 48
     var cornerRadius: CGFloat = Radius.tile
 
     var body: some View {
-        Image(systemName: "music.note")
-            .font(.system(size: size * 0.34, weight: .medium))
-            .foregroundStyle(colors.foreground.opacity(0.8))
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(systemName: "music.note")
+                    .font(.system(size: size * 0.34, weight: .medium))
+                    .foregroundStyle(colors.foreground.opacity(0.8))
+            }
+        }
             .frame(width: size, height: size)
-            .background(colors.background, in: .rect(cornerRadius: cornerRadius))
+            .background(colors.background)
+            .clipShape(.rect(cornerRadius: cornerRadius))
             .overlay {
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .strokeBorder(Color.white.opacity(0.08), lineWidth: 1)
@@ -49,6 +60,7 @@ struct TrackRow: View {
     var origin: TrackOrigin? = nil
     var trailing: String? = nil
     var isCurrent: Bool = false
+    var image: UIImage? = nil
 
     var body: some View {
         HStack(spacing: 12) {
@@ -58,7 +70,7 @@ struct TrackRow: View {
                     .monospacedDigit()
                     .frame(minWidth: 22)
             }
-            TrackArtwork(colors: artwork)
+            TrackArtwork(colors: artwork, image: image)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .textStyle(.body)

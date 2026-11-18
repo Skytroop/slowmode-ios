@@ -37,5 +37,13 @@ struct MainTabView: View {
         .fullScreenCover(isPresented: $player.isNowPlayingPresented) {
             NowPlayingView()
         }
+        .alert(
+            "No se pudo reproducir",
+            isPresented: Binding(get: { player.playbackError != nil }, set: { if !$0 { player.dismissError() } })
+        ) {
+            Button("Aceptar", role: .cancel) {}
+        } message: {
+            Text(player.playbackError ?? "")
+        }
     }
 }

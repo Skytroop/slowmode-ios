@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 enum LibraryTile: String, CaseIterable, Identifiable {
     case liked, playlists, albums, artists
@@ -27,6 +28,7 @@ enum LibraryTile: String, CaseIterable, Identifiable {
 struct LibraryView: View {
     @Environment(CatalogStore.self) private var store: CatalogStore
     @Environment(LibraryStore.self) private var library: LibraryStore
+    @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
     @Environment(PlayerController.self) private var player: PlayerController
     @Environment(AppNavigation.self) private var navigation: AppNavigation
     @State private var tile: LibraryTile = .liked
@@ -48,19 +50,10 @@ struct LibraryView: View {
                 }
                 .buttonStyle(.glass)
 
-                if catalog.tracks.isEmpty {
-                    ContentUnavailableView {
-                        Label("Importa tu música para empezar", systemImage: "music.note")
-                    } description: {
-                        Text("MP3, AAC, FLAC o WAV desde Archivos o iCloud Drive.")
-                    } actions: {
-                        Button("Importar") { navigation.isImportPresented = true }
-                            .buttonStyle(.glassProminent)
-                    }
-                } else {
-                    tiles(catalog)
-                    tileContent(catalog)
-                }
+                yourMusic(catalog)
+
+                tiles(catalog)
+                tileContent(catalog)
 
                 VStack(alignment: .leading, spacing: 12) {
                     SectionHeader(title: "Presets de Slow Mode guardados")
@@ -99,6 +92,64 @@ struct LibraryView: View {
         }
         .sheet(isPresented: $navigation.isImportPresented) {
             ImportSheet()
+        }
+    }
+
+    /// Pistas importadas (suenan de verdad). Mantén pulsada una para eliminarla.
+    @ViewBuilder
+    private func yourMusic(_ catalog: SampleCatalog) -> some View {
+        let tracks: [CatalogTrack] = localLibrary.catalogTracks
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Tu música") {
+                if !tracks.isEmpty {
+                    Text("\(tracks.count)")
+                        .textStyle(.caption)
+                        .monospacedDigit()
+                }
+            }
+            if tracks.isEmpty {
+                ContentUnavailableView {
+                    Label("Importa tu música para empezar", systemImage: "music.note")
+                } description: {
+                    Text("MP3, AAC, FLAC, WAV o AIFF desde Archivos o iCloud Drive.")
+                } actions: {
+                    Button("Importar") { navigation.isImportPresented = true }
+                        .buttonStyle(.glassProminent)
+                }
+            } else {
+                SurfaceList(items: tracks) { track in
+                    Button {
+                        player.play(track, in: tracks, from: "Tu música")
+                    } label: {
+                        TrackRow(
+                            title: track.title,
+                            subtitle: track.artist,
+                            artwork: ArtworkColors.forArtist(track.artistId, in: catalog),
+                            origin: track.origin,
+                            trailing: SlowModeFormat.duration(Double(track.duration)),
+                            isCurrent: player.currentTrack?.id == track.id,
+                            image: localLibrary.artwork(for: track.id)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            delete(track)
+                        } label: {
+                            Label("Eliminar de la biblioteca", systemImage: "trash")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func delete(_ track: CatalogTrack) {
+        if player.currentTrack?.id == track.id && player.isPlaying {
+            player.pause()
+        }
+        if let stored = localLibrary.track(catalogId: track.id) {
+            localLibrary.delete(stored)
         }
     }
 
@@ -236,9 +287,14 @@ private struct LibraryTileButton: View {
     }
 }
 
-/// Hoja "Importar o subir audio". La importación real llega en la Fase 3.
+/// Hoja "Importar o subir audio": copia los archivos elegidos a la app y lee sus metadatos.
 struct ImportSheet: View {
+    @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
     @Environment(\.dismiss) private var dismiss
+    @State private var showsPicker: Bool = false
+    @State private var importOrigin: TrackOrigin = .localFile
+    @State private var outcome: ImportOutcome?
+    @State private var pickerError: String?
 
     var body: some View {
         NavigationStack {
@@ -246,45 +302,104 @@ struct ImportSheet: View {
                 Section {
                     option(
                         title: "Importar desde Archivos",
-                        detail: "MP3, AAC, FLAC, WAV de Archivos o iCloud Drive",
-                        symbol: "folder"
+                        detail: "MP3, AAC, FLAC, WAV o AIFF de Archivos o iCloud Drive",
+                        symbol: "folder",
+                        origin: .localFile
                     )
                     option(
                         title: "Subir un original",
                         detail: "Grabaciones y mezclas propias que se pueden compartir",
-                        symbol: "waveform.badge.plus"
+                        symbol: "waveform.badge.plus",
+                        origin: .originalUpload
                     )
                 } footer: {
-                    Text("Las pistas se quedan en este iPhone salvo que publiques un original. Disponible en la próxima versión.")
+                    Text("Las pistas se copian a la app y se quedan en este iPhone. Puedes elegir varias a la vez.")
+                }
+
+                if localLibrary.isImporting {
+                    Section {
+                        HStack(spacing: 12) {
+                            ProgressView()
+                            Text("Importando…")
+                        }
+                    }
+                }
+
+                if let outcome {
+                    Section("Resultado") {
+                        Text(outcome.summary)
+                            .textStyle(.body)
+                        ForEach(Array(outcome.failures.enumerated()), id: \.offset) { _, failure in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(failure.fileName).textStyle(.body)
+                                Text(failure.reason.message).textStyle(.caption)
+                            }
+                        }
+                        if !outcome.duplicates.isEmpty {
+                            Text("Ya estaban en tu biblioteca: " + outcome.duplicates.joined(separator: ", "))
+                                .textStyle(.caption)
+                        }
+                    }
+                }
+
+                if let pickerError {
+                    Section {
+                        Text(pickerError).textStyle(.caption)
+                    }
                 }
             }
             .scrollContentBackground(.hidden)
             .navigationTitle("Importar o subir audio")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") { dismiss() }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(outcome == nil ? "Cerrar" : "Hecho") { dismiss() }
+                        .disabled(localLibrary.isImporting)
+                }
+            }
+            .fileImporter(
+                isPresented: $showsPicker,
+                allowedContentTypes: [.audio],
+                allowsMultipleSelection: true
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    pickerError = nil
+                    let origin: TrackOrigin = importOrigin
+                    Task {
+                        outcome = await localLibrary.importFiles(urls, origin: origin)
+                    }
+                case .failure:
+                    pickerError = "No se pudo abrir el selector de archivos. Inténtalo de nuevo."
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
+        .interactiveDismissDisabled(localLibrary.isImporting)
     }
 
-    private func option(title: String, detail: String, symbol: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: symbol)
-                .font(.title3)
-                .foregroundStyle(Palette.periwinkle)
-                .frame(width: 32)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).textStyle(.body)
-                Text(detail).textStyle(.caption)
+    private func option(title: String, detail: String, symbol: String, origin: TrackOrigin) -> some View {
+        Button {
+            importOrigin = origin
+            outcome = nil
+            showsPicker = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: symbol)
+                    .font(.title3)
+                    .foregroundStyle(Palette.periwinkle)
+                    .frame(width: 32)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).textStyle(.body)
+                    Text(detail).textStyle(.caption)
+                }
+                Spacer(minLength: 0)
             }
+            .frame(minHeight: 52)
+            .contentShape(.rect)
         }
-        .frame(minHeight: 52)
-        .opacity(0.6)
-        .accessibilityElement(children: .combine)
-        .accessibilityHint("Disponible en la próxima versión")
+        .buttonStyle(.plain)
+        .disabled(localLibrary.isImporting)
     }
 }

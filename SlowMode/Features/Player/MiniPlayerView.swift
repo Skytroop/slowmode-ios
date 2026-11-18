@@ -4,6 +4,7 @@ import SwiftUI
 struct MiniPlayerView: View {
     @Environment(PlayerController.self) private var player: PlayerController
     @Environment(CatalogStore.self) private var store: CatalogStore
+    @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
 
     var body: some View {
         if let track = player.currentTrack {
@@ -15,11 +16,7 @@ struct MiniPlayerView: View {
                     player.isNowPlayingPresented = true
                 } label: {
                     HStack(spacing: 10) {
-                        Image(systemName: "music.note")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(colors.foreground)
-                            .frame(width: 32, height: 32)
-                            .background(colors.background, in: .circle)
+                        TrackArtwork(colors: colors, image: localLibrary.artwork(for: track.id), size: 32, cornerRadius: 16)
                         VStack(alignment: .leading, spacing: 0) {
                             Text(track.title)
                                 .font(.subheadline.weight(.semibold))

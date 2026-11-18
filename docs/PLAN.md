@@ -17,12 +17,12 @@ Una fase por sesión (o por petición). Al terminar cada fase: push, CI en verde
 
 ## Fase 2 — Motor de audio y Slow Mode
 - `AudioEngineService` con el grafo de la sección 4 y tests del cálculo de tempo/tono/duración.
-- Reproducción real de archivos de audio incluidos para pruebas (generados o libres de derechos).
+- Reproducción real de la música del usuario: se adelanta de la Fase 3 la importación básica (`.fileImporter`, copia a `Application Support/Tracks`, metadatos y portada, SwiftData `Track`), en lugar de incluir audios de prueba en el bundle.
 - Panel Slow Mode conectado; cola, aleatorio, repetir.
 - Audio en segundo plano, centro de control y pantalla bloqueada, interrupciones, `AVRoutePickerView`.
 
 ## Fase 3 — Biblioteca real
-- Importación con `.fileImporter`, metadatos y portadas, insignias de origen.
+- Importación: pulir lo adelantado en la Fase 2 (búsqueda, álbumes y artistas a partir de las pistas importadas, elegir qué hacer con duplicados).
 - Me gusta, playlists (crear, añadir), álbumes y artistas derivados de las pistas.
 - Estadísticas de Inicio a partir de `PlayEvent`.
 

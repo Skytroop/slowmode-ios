@@ -48,8 +48,14 @@ extension SampleCatalog {
         }
     }
 
+    /// Presets que encajan con una pista (de ejemplo o importada): por id o por título + artista + duración (±3 s).
     func presets(forTrack track: CatalogTrack) -> [CommunityPreset] {
-        presets.filter { localTrack(for: $0)?.id == track.id }
+        presets.filter { preset in
+            preset.trackId == track.id
+                || (Self.sameText(preset.track.title, track.title)
+                    && Self.sameText(preset.track.artist, track.artist)
+                    && abs(preset.track.duration - track.duration) <= 3)
+        }
     }
 
     /// Álbumes derivados de las pistas, en el orden en que aparecen.
