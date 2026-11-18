@@ -12,7 +12,6 @@ struct SlowModePanel: View {
     @Environment(PlayerController.self) private var player: PlayerController
     @Environment(PresetStore.self) private var presetStore: PresetStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion: Bool
-    @State private var showsShareInfo: Bool = false
     @State private var isNamingPreset: Bool = false
     @State private var presetName: String = ""
 
@@ -170,19 +169,21 @@ struct SlowModePanel: View {
                 .accessibilityLabel("Guardar preset")
                 .accessibilityHint("Guarda estos ajustes para esta canción")
 
-                Button {
-                    showsShareInfo = true
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .frame(width: 36, height: 36)
-                }
-                .buttonStyle(.glass)
-                .disabled(player.slow.summary == nil)
-                .accessibilityLabel("Compartir preset")
-                .alert("Compartir preset", isPresented: $showsShareInfo) {
-                    Button("Entendido", role: .cancel) {}
-                } message: {
-                    Text("Se compartirán solo los ajustes (\(summaryText)) y el título y artista de la pista, nunca el audio. Compartir con la comunidad llega más adelante; de momento usa Guardar.")
+                if let track = player.currentTrack {
+                    let file = PresetFile(name: PresetStore.suggestedName(for: player.slow), settings: player.slow, track: track)
+                    ShareLink(
+                        item: PresetShareItem(file: file),
+                        subject: Text(file.name),
+                        message: Text(file.shareMessage),
+                        preview: SharePreview(file.name)
+                    ) {
+                        Image(systemName: "square.and.arrow.up")
+                            .frame(width: 36, height: 36)
+                    }
+                    .buttonStyle(.glass)
+                    .disabled(player.slow.summary == nil)
+                    .accessibilityLabel("Compartir ajustes")
+                    .accessibilityHint("Envía solo los ajustes de Slow Mode, nunca el audio")
                 }
 
                 Spacer(minLength: 0)

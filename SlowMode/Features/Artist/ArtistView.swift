@@ -44,7 +44,8 @@ struct ArtistView: View {
                                 presets: catalog.presets.filter { SampleCatalog.sameText($0.track.artist, artist.name) },
                                 showsArtist: false,
                                 emptyMessage: "Aún no hay presets de \(artist.name). Guarda el tuyo desde Reproduciendo.",
-                                onDelete: { preset in presetStore.delete(presetId: preset.id) }
+                                onDelete: { preset in presetStore.delete(presetId: preset.id) },
+                                onRename: { preset, name in _ = presetStore.rename(presetId: preset.id, to: name) }
                             )
                         }
                     }

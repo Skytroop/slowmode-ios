@@ -90,6 +90,10 @@ struct PresetListSection: View {
     var emptyMessage: String = "Todavía no hay presets que coincidan."
     /// Si se indica, los presets propios se pueden eliminar manteniendo pulsado.
     var onDelete: ((CommunityPreset) -> Void)? = nil
+    /// Si se indica, los presets guardados se pueden renombrar manteniendo pulsado.
+    var onRename: ((CommunityPreset, String) -> Void)? = nil
+    @State private var renaming: CommunityPreset?
+    @State private var renameText: String = ""
 
     @Environment(CatalogStore.self) private var store: CatalogStore
     @Environment(LibraryStore.self) private var library: LibraryStore
@@ -122,6 +126,23 @@ struct PresetListSection: View {
                         onLike: { library.toggleLike(presetId: preset.id) }
                     )
                     .contextMenu {
+                        let file = PresetFile(preset: preset)
+                        ShareLink(
+                            item: PresetShareItem(file: file),
+                            subject: Text(file.name),
+                            message: Text(file.shareMessage),
+                            preview: SharePreview(file.name)
+                        ) {
+                            Label("Compartir ajustes", systemImage: "square.and.arrow.up")
+                        }
+                        if onRename != nil, preset.id.hasPrefix(MinePresetID.prefix) {
+                            Button {
+                                renameText = preset.name
+                                renaming = preset
+                            } label: {
+                                Label("Renombrar", systemImage: "pencil")
+                            }
+                        }
                         if let onDelete, preset.id.hasPrefix(MinePresetID.prefix) {
                             Button(role: .destructive) {
                                 onDelete(preset)
@@ -134,6 +155,15 @@ struct PresetListSection: View {
             }
         }
         .missingTrackAlert($missingPreset)
+        .alert(
+            "Renombrar preset",
+            isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } }),
+            presenting: renaming
+        ) { preset in
+            TextField("Nombre", text: $renameText)
+            Button("Guardar") { onRename?(preset, renameText) }
+            Button("Cancelar", role: .cancel) {}
+        }
     }
 
     /// Orden en su propia fila (a la derecha) y chips de filtro a todo el ancho debajo.

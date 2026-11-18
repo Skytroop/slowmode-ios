@@ -1,15 +1,18 @@
 import SwiftUI
 
-/// Presets a mano en Reproduciendo, sin abrir el panel: Original, los rápidos y los tuyos de esta canción.
+/// Presets a mano en Reproduciendo, sin abrir el panel: Original, los rápidos y los guardados de esta canción.
 /// Tocar uno aplica sus ajustes y activa Slow Mode; "Original" lo desactiva.
+/// Mantener pulsado uno guardado: compartir, renombrar o eliminar.
 struct SlowPresetBar: View {
     let track: CatalogTrack
 
     @Environment(PlayerController.self) private var player: PlayerController
     @Environment(PresetStore.self) private var presetStore: PresetStore
+    @State private var renaming: SlowPreset?
+    @State private var renameText: String = ""
 
     var body: some View {
-        let mine: [SlowPreset] = presetStore.presets(for: track)
+        let saved: [SlowPreset] = presetStore.presets(for: track)
 
         ScrollView(.horizontal, showsIndicators: false) {
             GlassEffectContainer(spacing: 8) {
@@ -26,12 +29,27 @@ struct SlowPresetBar: View {
                         }
                         .accessibilityHint("\(SlowModeFormat.tempo(quick.tempo)), \(SlowModeFormat.pitch(quick.pitch))")
                     }
-                    ForEach(mine) { preset in
+                    ForEach(saved) { preset in
                         Chip(title: "★ \(preset.name)", isSelected: player.slow == preset.settings) {
                             player.slow = preset.settings
                         }
-                        .accessibilityLabel("Tu preset \(preset.name)")
+                        .accessibilityLabel(preset.isMine ? "Tu preset \(preset.name)" : "Preset recibido \(preset.name)")
                         .contextMenu {
+                            let file = PresetFile(preset: preset.communityPreset)
+                            ShareLink(
+                                item: PresetShareItem(file: file),
+                                subject: Text(file.name),
+                                message: Text(file.shareMessage),
+                                preview: SharePreview(file.name)
+                            ) {
+                                Label("Compartir ajustes", systemImage: "square.and.arrow.up")
+                            }
+                            Button {
+                                renameText = preset.name
+                                renaming = preset
+                            } label: {
+                                Label("Renombrar", systemImage: "pencil")
+                            }
                             Button(role: .destructive) {
                                 presetStore.delete(preset)
                             } label: {
@@ -44,5 +62,14 @@ struct SlowPresetBar: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Presets de Slow Mode")
+        .alert(
+            "Renombrar preset",
+            isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } }),
+            presenting: renaming
+        ) { preset in
+            TextField("Nombre", text: $renameText)
+            Button("Guardar") { _ = presetStore.rename(preset, to: renameText) }
+            Button("Cancelar", role: .cancel) {}
+        }
     }
 }

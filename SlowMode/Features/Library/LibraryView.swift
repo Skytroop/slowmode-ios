@@ -69,7 +69,8 @@ struct LibraryView: View {
                         showsControls: false,
                         emptyTitle: "Sin presets guardados",
                         emptyMessage: "Guarda tu versión desde Reproduciendo o dale a me gusta a un preset de la comunidad.",
-                        onDelete: { preset in presetStore.delete(presetId: preset.id) }
+                        onDelete: { preset in presetStore.delete(presetId: preset.id) },
+                        onRename: { preset, name in _ = presetStore.rename(presetId: preset.id, to: name) }
                     )
                 }
             }
