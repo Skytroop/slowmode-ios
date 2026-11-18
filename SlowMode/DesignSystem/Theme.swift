@@ -8,6 +8,8 @@ enum AppStorageKey {
 /// Apariencia activa: tema oscuro o negro puro (OLED).
 struct Theme: Sendable, Equatable {
     let isOLED: Bool
+    /// "Reducir transparencia": superficies opacas y fondo ambiental más tenue.
+    var reducesTransparency: Bool = false
 
     static let dark: Theme = Theme(isOLED: false)
     static let oled: Theme = Theme(isOLED: true)
@@ -17,7 +19,10 @@ struct Theme: Sendable, Equatable {
 
     /// Superficie de contenido (tarjetas y listas no destacadas). No es cristal.
     var surface: Color {
-        isOLED ? Color.white.opacity(0.04) : Color(.sRGB, red: 24 / 255, green: 24 / 255, blue: 30 / 255, opacity: 0.58)
+        if reducesTransparency {
+            return isOLED ? Color(hex: "#0E0E11") : Color(hex: "#141418")
+        }
+        return isOLED ? Color.white.opacity(0.04) : Color(.sRGB, red: 24 / 255, green: 24 / 255, blue: 30 / 255, opacity: 0.58)
     }
 
     /// Separador fino entre filas.
@@ -25,6 +30,12 @@ struct Theme: Sendable, Equatable {
 
     /// Opacidad de las tres manchas del fondo ambiental (periwinkle, rosa, índigo).
     func ambientOpacities(_ intensity: AmbientIntensity) -> (Double, Double, Double) {
+        let base: (Double, Double, Double) = baseAmbientOpacities(intensity)
+        guard reducesTransparency else { return base }
+        return (base.0 * 0.5, base.1 * 0.5, base.2 * 0.5)
+    }
+
+    private func baseAmbientOpacities(_ intensity: AmbientIntensity) -> (Double, Double, Double) {
         switch (intensity, isOLED) {
         case (.standard, false): return (0.18, 0.14, 0.38)
         case (.standard, true): return (0.07, 0.05, 0.10)
@@ -48,11 +59,12 @@ extension EnvironmentValues {
 /// Aplica el tema guardado en `@AppStorage("oledBlack")` a todo lo que contiene.
 struct ThemedRoot<Content: View>: View {
     @AppStorage(AppStorageKey.oledBlack) private var oledBlack: Bool = false
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency: Bool
     @ViewBuilder let content: Content
 
     var body: some View {
         content
-            .environment(\.theme, oledBlack ? .oled : .dark)
+            .environment(\.theme, Theme(isOLED: oledBlack, reducesTransparency: reduceTransparency))
             .preferredColorScheme(.dark)
             .tint(Palette.periwinkle)
     }

@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import ImageIO
 import Observation
 import SwiftData
 import UIKit
@@ -156,9 +157,23 @@ final class LocalLibrary {
     func artwork(for catalogId: String) -> UIImage? {
         guard let track = track(catalogId: catalogId) else { return nil }
         if let cached = artworkCache[track.id] { return cached }
-        guard let data = track.artworkData, let image = UIImage(data: data) else { return nil }
+        guard let data = track.artworkData, let image = Self.downsampledImage(data, maxPixelSize: 600) else { return nil }
         artworkCache[track.id] = image
         return image
+    }
+
+    /// Decodifica la portada reducida (las de los MP3 pueden medir 3000 px y ocupar decenas de MB al pintarse).
+    nonisolated static func downsampledImage(_ data: Data, maxPixelSize: Int) -> UIImage? {
+        let sourceOptions: [CFString: Any] = [kCGImageSourceShouldCache: false]
+        guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions as CFDictionary) else { return nil }
+        let thumbnailOptions: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+        ]
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions as CFDictionary) else { return nil }
+        return UIImage(cgImage: cgImage)
     }
 
     /// Copia local de la pista a la que apunta un preset (título + artista + duración ±3 s).
