@@ -38,8 +38,25 @@ jobs:
           xcodebuild test \
             -project SlowMode.xcodeproj -scheme SlowMode \
             -destination "platform=iOS Simulator,name=$SIM" \
+            -resultBundlePath TestResults.xcresult \
             | tee test.log | grep -iE "error:|warning: |test case|\*\* TEST" || true
           grep -q "\*\* TEST SUCCEEDED \*\*" test.log
+
+      - name: Resumen de tests
+        if: always()
+        run: |
+          if [ -d TestResults.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path TestResults.xcresult --compact || true
+            echo
+            xcrun xcresulttool get test-results tests --path TestResults.xcresult --compact \
+              | python3 -c 'import json,sys
+          def walk(n, out):
+              if n.get("nodeType") == "Test Case": out.append((n.get("result"), n.get("name")))
+              for c in n.get("children", []): walk(c, out)
+          out = []
+          for n in json.load(sys.stdin).get("testNodes", []): walk(n, out)
+          for r, name in out: print(("OK   " if r == "Passed" else "FAIL ") + str(name))' || true
+          fi
 
       - name: Compilar para iPhone (sin firmar)
         run: |
