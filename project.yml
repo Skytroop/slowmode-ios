@@ -20,7 +20,9 @@ targets:
       path: SlowMode/Info.plist
       properties:
         CFBundleDisplayName: Slow Mode
-        UILaunchScreen: {}
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+          UIImageName: LaunchLogo
         UIBackgroundModes: [audio]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         # Presets compartidos (.slowpreset): solo ajustes, nunca audio. iOS copia el archivo a la app al abrirlo.
@@ -41,6 +43,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.slowmode.app
         TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
   SlowModeTests:
     type: bundle.unit-test
     platform: iOS
@@ -50,11 +53,25 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: SlowMode
+  SlowModeUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    # Comparte los identificadores de accesibilidad con la app (declarados una sola vez).
+    sources:
+      - SlowModeUITests
+      - path: SlowMode/App/AccessibilityID.swift
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.slowmode.app.uitests
+    dependencies:
+      - target: SlowMode
 schemes:
   SlowMode:
     build:
       targets:
         SlowMode: all
         SlowModeTests: [test]
+        SlowModeUITests: [test]
     test:
-      targets: [SlowModeTests]
+      targets: [SlowModeTests, SlowModeUITests]
