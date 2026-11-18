@@ -56,19 +56,11 @@ struct RootView: View {
         let localLibrary: LocalLibrary = localLibrary
         player.fileURLProvider = { track in localLibrary.fileURL(for: track.id) }
         player.artworkProvider = { track in localLibrary.artwork(for: track.id) }
+        player.listeningObserver = { tick in localLibrary.handle(tick) }
         catalogStore.load()
 
-        // Si tienes música importada, el minirreproductor arranca con ella; si no, con los datos de ejemplo.
-        if !localLibrary.tracks.isEmpty {
-            player.prepareIfIdle(with: localLibrary.catalogTracks, source: "Tu música")
-        } else {
-            let catalog: SampleCatalog = catalogStore.catalog
-            let artistId: String = catalog.home.discover.centerArtistId
-            player.prepareIfIdle(
-                with: catalog.tracks(byArtist: artistId),
-                source: catalog.artist(id: artistId)?.name ?? ""
-            )
-        }
+        // El minirreproductor arranca con tu música (si aún no has importado nada, queda vacío).
+        player.prepareIfIdle(with: localLibrary.catalogTracks, source: "Tu música")
     }
 }
 

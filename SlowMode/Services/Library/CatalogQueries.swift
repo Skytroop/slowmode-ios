@@ -33,6 +33,9 @@ extension SampleCatalog {
         if let artist = self.artist(id: artistId) {
             return (artist.color, artist.onColor)
         }
+        if artistId.hasPrefix(LocalTrackID.artistPrefix) {
+            return ArtistPalette.colors(for: String(artistId.dropFirst(LocalTrackID.artistPrefix.count)))
+        }
         return ("#F4F1EA", "#101014")
     }
 

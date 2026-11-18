@@ -52,6 +52,9 @@ final class PlayerController {
     /// Devuelve el archivo de audio de una pista (solo las importadas tienen).
     @ObservationIgnored var fileURLProvider: (CatalogTrack) -> URL? = { _ in nil }
     @ObservationIgnored var artworkProvider: (CatalogTrack) -> UIImage? = { _ in nil }
+    /// Recibe un tick cada cuarto de segundo mientras suena (para contar escuchas).
+    @ObservationIgnored var listeningObserver: (ListeningTick) -> Void = { _ in }
+    @ObservationIgnored private var sessionID: UUID = UUID()
 
     @ObservationIgnored private let engine: PlaybackEngine?
     @ObservationIgnored private let nowPlaying: NowPlayingService?
@@ -196,7 +199,14 @@ final class PlayerController {
 
     /// Avanza el reloj `seconds` de tiempo real. Con audio real, lee la posición del motor.
     func tick(seconds: Double) {
-        guard isPlaying, currentTrack != nil else { return }
+        guard isPlaying, let track = currentTrack else { return }
+        listeningObserver(ListeningTick(
+            sessionID: sessionID,
+            trackID: track.id,
+            seconds: seconds,
+            tempo: slow.effectiveTempo,
+            duration: duration
+        ))
         if usesEngine, let engine {
             position = min(engine.currentTime, duration)
             return
@@ -218,6 +228,7 @@ final class PlayerController {
         currentTrack = track
         position = 0
         loopRange = nil
+        sessionID = UUID()
         usesEngine = false
         guard let engine else { return }
         guard let url = fileURLProvider(track) else {
