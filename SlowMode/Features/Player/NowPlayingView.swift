@@ -4,7 +4,6 @@ import SwiftUI
 struct NowPlayingView: View {
     @Environment(PlayerController.self) private var player: PlayerController
     @Environment(CatalogStore.self) private var store: CatalogStore
-    @Environment(LibraryStore.self) private var library: LibraryStore
     @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion: Bool
@@ -37,6 +36,7 @@ struct NowPlayingView: View {
                                 animate { proxy.scrollTo(Self.topAnchor, anchor: .top) }
                             }
                             titleBlock(track)
+                            SlowPresetBar(track: track)
                             progress
                             transport
                             outputRow
@@ -172,7 +172,7 @@ struct NowPlayingView: View {
     }
 
     private func titleBlock(_ track: CatalogTrack) -> some View {
-        let isLiked: Bool = library.isLiked(trackId: track.id)
+        let isLiked: Bool = localLibrary.isLiked(catalogId: track.id)
 
         return HStack(alignment: .top, spacing: 8) {
             VStack(alignment: .leading, spacing: 6) {
@@ -182,10 +182,6 @@ struct NowPlayingView: View {
                 Text(subtitle(for: track))
                     .textStyle(.caption)
                     .lineLimit(2)
-                if let summary = player.slow.summary {
-                    Pill(text: summary, background: Palette.periwinkle, foreground: Palette.ink)
-                        .accessibilityLabel("Slow Mode: \(summary)")
-                }
             }
             Spacer(minLength: 8)
             Button {
@@ -199,7 +195,7 @@ struct NowPlayingView: View {
             .accessibilityLabel("Añadir a playlist")
 
             Button {
-                library.toggleLike(trackId: track.id)
+                localLibrary.toggleLike(catalogId: track.id)
             } label: {
                 Image(systemName: isLiked ? "heart.fill" : "heart")
                     .font(.title3)

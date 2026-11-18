@@ -21,11 +21,6 @@ struct SlowModePanel: View {
         return player.slow.summary ?? "Sin cambios"
     }
 
-    private var myPresets: [SlowPreset] {
-        guard let track = player.currentTrack else { return [] }
-        return presetStore.presets(for: track)
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             header
@@ -49,36 +44,6 @@ struct SlowModePanel: View {
         guard let track = player.currentTrack,
               let saved = presetStore.save(name: presetName, settings: player.slow, for: track) else { return }
         onSaved(saved.name)
-    }
-
-    /// Presets guardados para la canción que suena. Tocar uno aplica sus ajustes; mantener pulsado, eliminar.
-    @ViewBuilder
-    private var myPresetChips: some View {
-        let presets: [SlowPreset] = myPresets
-        if !presets.isEmpty {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Tus presets")
-                    .textStyle(.caption)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    GlassEffectContainer(spacing: 8) {
-                        HStack(spacing: 8) {
-                            ForEach(presets) { preset in
-                                Chip(title: preset.name, isSelected: player.slow == preset.settings) {
-                                    player.slow = preset.settings
-                                }
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        presetStore.delete(preset)
-                                    } label: {
-                                        Label("Eliminar preset", systemImage: "trash")
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private func animate(_ change: () -> Void) {
@@ -183,26 +148,12 @@ struct SlowModePanel: View {
                 .tint(Palette.periwinkle)
                 .frame(minHeight: 44)
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    GlassEffectContainer(spacing: 8) {
-                        HStack(spacing: 8) {
-                            ForEach(QuickPreset.all) { preset in
-                                Chip(title: preset.name, isSelected: player.slow.matches(preset)) {
-                                    player.slow.apply(preset)
-                                }
-                            }
-                        }
-                    }
-                }
-
                 Text(SlowModeFormat.stretchSentence(duration: trackDuration, tempo: player.slow.tempo))
                     .textStyle(.caption)
                     .monospacedDigit()
             }
             .disabled(!player.slow.isEnabled)
             .opacity(player.slow.isEnabled ? 1 : 0.5)
-
-            myPresetChips
 
             HStack(spacing: 8) {
                 Button {
