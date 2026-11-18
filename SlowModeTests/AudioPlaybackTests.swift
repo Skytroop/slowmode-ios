@@ -138,9 +138,9 @@ struct PlayerEngineTests {
 @MainActor
 struct LocalLibraryImportTests {
     private func makeLibrary() throws -> (LocalLibrary, ModelContainer, URL) {
-        let container = try ModelContainer(for: Track.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try TestData.makeContainer()
         let directory: URL = FileManager.default.temporaryDirectory.appending(path: "SlowModeTests-\(UUID().uuidString)")
-        let library = LocalLibrary(context: container.mainContext, directory: directory)
+        let library = LocalLibrary(context: container.mainContext, directory: directory, backfillsGenres: false)
         return (library, container, directory)
     }
 

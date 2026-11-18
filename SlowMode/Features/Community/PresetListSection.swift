@@ -133,19 +133,7 @@ struct PresetListSection: View {
                 }
             }
         }
-        .alert(
-            "Necesitas esta pista en tu biblioteca",
-            isPresented: Binding(get: { missingPreset != nil }, set: { if !$0 { missingPreset = nil } }),
-            presenting: missingPreset
-        ) { _ in
-            Button("Importar") {
-                player.isNowPlayingPresented = false
-                navigation.openImport()
-            }
-            Button("Cancelar", role: .cancel) {}
-        } message: { preset in
-            Text("Importa «\(preset.track.title)» de \(preset.track.artist) para aplicarle este preset. Slow Mode nunca descarga ni comparte audio.")
-        }
+        .missingTrackAlert($missingPreset)
     }
 
     /// Orden en su propia fila (a la derecha) y chips de filtro a todo el ancho debajo.
@@ -194,7 +182,7 @@ struct PresetListSection: View {
     }
 
     private func play(_ preset: CommunityPreset) {
-        if let track = localLibrary.match(preset.track) ?? store.catalog.localTrack(for: preset) {
+        if let track = localLibrary.match(preset.track) {
             player.apply(preset, to: track)
         } else {
             missingPreset = preset

@@ -72,7 +72,7 @@ struct QueueSheet: View {
 /// Hoja "Añadir a playlist": playlists existentes y "Nueva playlist".
 struct AddToPlaylistSheet: View {
     @Environment(PlayerController.self) private var player: PlayerController
-    @Environment(LibraryStore.self) private var library: LibraryStore
+    @Environment(LocalLibrary.self) private var library: LocalLibrary
     @Environment(\.dismiss) private var dismiss
     @State private var isNaming: Bool = false
     @State private var name: String = ""
@@ -96,12 +96,12 @@ struct AddToPlaylistSheet: View {
                     }
                     ForEach(library.playlists) { playlist in
                         Button {
-                            add(to: playlist.id)
+                            add(to: playlist)
                         } label: {
                             HStack {
                                 Text(playlist.name)
                                 Spacer()
-                                Text("\(playlist.trackIds.count)")
+                                Text("\(playlist.trackIDs.count)")
                                     .monospacedDigit()
                                     .foregroundStyle(Palette.textSecondary)
                             }
@@ -124,7 +124,7 @@ struct AddToPlaylistSheet: View {
                 TextField("Nombre", text: $name)
                 Button("Crear") {
                     if let playlist = library.createPlaylist(named: name) {
-                        add(to: playlist.id)
+                        add(to: playlist)
                     }
                 }
                 Button("Cancelar", role: .cancel) {}
@@ -133,9 +133,9 @@ struct AddToPlaylistSheet: View {
         .presentationDetents([.medium, .large])
     }
 
-    private func add(to playlistId: UUID) {
+    private func add(to playlist: Playlist) {
         if let track = player.currentTrack {
-            library.add(trackId: track.id, toPlaylist: playlistId)
+            library.add(trackCatalogId: track.id, to: playlist)
         }
         dismiss()
     }

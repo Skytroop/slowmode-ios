@@ -15,7 +15,7 @@ struct DiscoverMapCard: View {
                 Text("Descubre")
                     .textStyle(.sectionTitle)
                     .accessibilityAddTraits(.isHeader)
-                Text("Artistas parecidos por género y estilo")
+                Text("Tus artistas, por cercanía de género y escuchas")
                     .font(.footnote)
             }
             .foregroundStyle(Palette.ink)

@@ -19,6 +19,11 @@ struct TopGenresCard: View {
                 .textStyle(.sectionTitle)
                 .accessibilityAddTraits(.isHeader)
 
+            if genres.isEmpty {
+                Text("Escucha un poco de tu música y aquí verás tus géneros.")
+                    .textStyle(.caption)
+                    .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+            } else {
             GeometryReader { proxy in
                 let scale: CGFloat = proxy.size.width / 200
                 ZStack {
@@ -57,6 +62,7 @@ struct TopGenresCard: View {
                 }
             }
             .aspectRatio(200.0 / 175.0, contentMode: .fit)
+            }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)

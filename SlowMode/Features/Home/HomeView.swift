@@ -2,31 +2,47 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(CatalogStore.self) private var store: CatalogStore
+    @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
+    @Environment(AppNavigation.self) private var navigation: AppNavigation
     @State private var selectedGenre: String?
     @State private var sort: ArtistSort = .plays
     @State private var layout: ArtistLayout = .list
 
     var body: some View {
-        let catalog: SampleCatalog = store.catalog
+        let catalog: SampleCatalog = localLibrary.userCatalog(community: store.catalog, myPresets: [])
 
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 HomeHeader(trackCount: catalog.home.trackCount)
-                DiscoverMapCard(catalog: catalog)
-                HStack(alignment: .top, spacing: 12) {
-                    TopGenresCard(genres: catalog.home.topGenres, selectedGenre: $selectedGenre)
-                    VStack(spacing: 12) {
-                        SongsPlayedCard(count: catalog.home.songsPlayed)
-                        StreakCard(days: catalog.home.streakDays)
+                if catalog.tracks.isEmpty {
+                    ContentUnavailableView {
+                        Label("Importa tu música para empezar", systemImage: "music.note")
+                    } description: {
+                        Text("Tus artistas, géneros y estadísticas aparecerán aquí a medida que escuches.")
+                    } actions: {
+                        Button("Importar") { navigation.openImport() }
+                            .buttonStyle(.glassProminent)
                     }
+                    .padding(.top, 40)
+                } else {
+                    if catalog.artist(id: catalog.home.discover.centerArtistId) != nil {
+                        DiscoverMapCard(catalog: catalog)
+                    }
+                    HStack(alignment: .top, spacing: 12) {
+                        TopGenresCard(genres: catalog.home.topGenres, selectedGenre: $selectedGenre)
+                        VStack(spacing: 12) {
+                            SongsPlayedCard(count: catalog.home.songsPlayed)
+                            StreakCard(days: catalog.home.streakDays)
+                        }
+                    }
+                    ArtistDirectorySection(
+                        artists: catalog.artists,
+                        genres: catalog.genres,
+                        selectedGenre: $selectedGenre,
+                        sort: $sort,
+                        layout: $layout
+                    )
                 }
-                ArtistDirectorySection(
-                    artists: catalog.artists,
-                    genres: catalog.genres,
-                    selectedGenre: $selectedGenre,
-                    sort: $sort,
-                    layout: $layout
-                )
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)

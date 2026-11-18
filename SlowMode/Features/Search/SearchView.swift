@@ -3,9 +3,18 @@ import SwiftUI
 struct SearchView: View {
     @Environment(CatalogStore.self) private var store: CatalogStore
     @Environment(PlayerController.self) private var player: PlayerController
+    @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
+    @Environment(PresetStore.self) private var presetStore: PresetStore
     @State private var query: String = ""
     @State private var scope: SearchScope?
-    @State private var recents: [String] = ["Luna Vale", "noche", "Paper Lanterns", "daycore"]
+    @State private var missingPreset: CommunityPreset?
+    @AppStorage("recentSearches") private var recentsStorage: String = ""
+
+    /// Búsquedas recientes guardadas (separadas por saltos de línea).
+    private var recents: [String] {
+        get { recentsStorage.split(separator: "\n").map(String.init) }
+        nonmutating set { recentsStorage = newValue.joined(separator: "\n") }
+    }
 
     private var trimmedQuery: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -28,6 +37,7 @@ struct SearchView: View {
         .navigationTitle("Buscar")
         .searchable(text: $query, prompt: "Artistas, canciones, presets")
         .onSubmit(of: .search) { remember(trimmedQuery) }
+        .missingTrackAlert($missingPreset)
     }
 
     private var scopeChips: some View {
@@ -82,7 +92,7 @@ struct SearchView: View {
 
     @ViewBuilder
     private var results: some View {
-        let catalog: SampleCatalog = store.catalog
+        let catalog: SampleCatalog = localLibrary.userCatalog(community: store.catalog, myPresets: presetStore.communityPresets)
         let found: [SearchResult] = SearchService.search(trimmedQuery, scope: scope, in: catalog)
         if found.isEmpty {
             ContentUnavailableView(
@@ -128,7 +138,7 @@ struct SearchView: View {
         case .mix(let mix):
             Button {
                 remember(trimmedQuery)
-                if let id = mix.previewTrackId, let track = catalog.track(id: id) {
+                if let id = mix.previewTrackId, let track = store.catalog.track(id: id) {
                     player.play(track, in: [track], from: "\(mix.title) de @\(mix.creator)")
                 }
             } label: {
@@ -143,8 +153,10 @@ struct SearchView: View {
         case .preset(let preset):
             Button {
                 remember(trimmedQuery)
-                if let track = catalog.localTrack(for: preset) {
+                if let track = localLibrary.match(preset.track) {
                     player.apply(preset, to: track)
+                } else {
+                    missingPreset = preset
                 }
             } label: {
                 EntityRow(

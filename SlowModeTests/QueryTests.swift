@@ -110,25 +110,19 @@ struct CatalogQueryTests {
 
 @MainActor
 struct LibraryStoreTests {
-    @Test func playlistsRejectEmptyNamesAndDuplicates() {
-        let library = LibraryStore(playlists: [])
-        #expect(library.createPlaylist(named: "   ") == nil)
-        let playlist = library.createPlaylist(named: " Noche ")
-        #expect(playlist?.name == "Noche")
-        if let id = playlist?.id {
-            #expect(library.add(trackId: "a0-0", toPlaylist: id))
-            #expect(!library.add(trackId: "a0-0", toPlaylist: id))
-        }
-        #expect(library.playlists.first?.trackIds == ["a0-0"])
-    }
+    @Test func presetLikesAndFollowsPersist() throws {
+        let suite: String = "LibraryStoreTests-\(UUID().uuidString)"
+        let defaults: UserDefaults = try #require(UserDefaults(suiteName: suite))
+        let store = LibraryStore(defaults: defaults)
+        store.toggleLike(presetId: "p1")
+        store.toggleFollow("u1")
+        #expect(store.isLiked(presetId: "p1"))
 
-    @Test func likesToggle() {
-        let library = LibraryStore(likedTrackIds: [], likedPresetIds: [])
-        library.toggleLike(trackId: "t")
-        library.toggleLike(presetId: "p")
-        #expect(library.isLiked(trackId: "t"))
-        #expect(library.isLiked(presetId: "p"))
-        library.toggleLike(trackId: "t")
-        #expect(!library.isLiked(trackId: "t"))
+        let reopened = LibraryStore(defaults: defaults)
+        #expect(reopened.isLiked(presetId: "p1"))
+        #expect(reopened.isFollowing("u1"))
+        reopened.toggleLike(presetId: "p1")
+        #expect(!LibraryStore(defaults: defaults).isLiked(presetId: "p1"))
+        defaults.removePersistentDomain(forName: suite)
     }
 }

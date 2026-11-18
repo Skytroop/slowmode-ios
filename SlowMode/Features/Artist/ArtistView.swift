@@ -4,27 +4,35 @@ struct ArtistView: View {
     let artistId: String
 
     @Environment(CatalogStore.self) private var store: CatalogStore
+    @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
+    @Environment(PresetStore.self) private var presetStore: PresetStore
     @Environment(PlayerController.self) private var player: PlayerController
     @State private var section: ArtistSection = .top
+    @State private var isEditingGenre: Bool = false
+    @State private var genreText: String = ""
 
     enum ArtistSection: Hashable {
         case top, presets
     }
 
+    private var catalog: SampleCatalog {
+        localLibrary.userCatalog(community: store.catalog, myPresets: presetStore.communityPresets)
+    }
+
     var body: some View {
-        let catalog: SampleCatalog = store.catalog
+        let catalog: SampleCatalog = catalog
 
         Group {
             if let artist = catalog.artist(id: artistId) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        ArtistHeader(artist: artist) {
+                        ArtistHeader(artist: artist, rankTotal: catalog.artists.count) {
                             playTop(artist, catalog: catalog)
                         }
 
                         Picker("Sección", selection: $section) {
                             Text("Más escuchadas").tag(ArtistSection.top)
-                            Text("Presets de la comunidad").tag(ArtistSection.presets)
+                            Text("Presets").tag(ArtistSection.presets)
                         }
                         .pickerStyle(.segmented)
 
@@ -33,17 +41,35 @@ struct ArtistView: View {
                             topTracks(artist, catalog: catalog)
                         case .presets:
                             PresetListSection(
-                                presets: catalog.presets(byArtist: artist.id),
+                                presets: catalog.presets.filter { SampleCatalog.sameText($0.track.artist, artist.name) },
                                 showsArtist: false,
-                                emptyMessage: "Nadie ha compartido presets de \(artist.name) todavía."
+                                emptyMessage: "Aún no hay presets de \(artist.name). Guarda el tuyo desde Reproduciendo.",
+                                onDelete: { preset in presetStore.delete(presetId: preset.id) }
                             )
                         }
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 24)
                 }
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            genreText = artist.genre == ListeningStats.noGenre ? "" : artist.genre
+                            isEditingGenre = true
+                        } label: {
+                            Label("Cambiar género", systemImage: "tag")
+                        }
+                    }
+                }
+                .alert("Género de \(artist.name)", isPresented: $isEditingGenre) {
+                    TextField("Por ejemplo, Indie", text: $genreText)
+                    Button("Guardar") { localLibrary.setGenre(genreText, forArtistId: artist.id) }
+                    Button("Cancelar", role: .cancel) {}
+                } message: {
+                    Text("Se aplica a todas sus canciones. Déjalo vacío para quitarlo.")
+                }
             } else {
-                ContentUnavailableView("Artista no encontrado", systemImage: "person.slash")
+                ContentUnavailableView("Artista no encontrado", systemImage: "person.slash", description: Text("Puede que hayas borrado sus canciones."))
             }
         }
         .background(AmbientBackground())
@@ -67,7 +93,8 @@ struct ArtistView: View {
                         subtitle: "\(item.track.plays) reproducciones · \(SlowModeFormat.duration(Double(item.track.duration)))",
                         artwork: colors,
                         rank: item.index + 1,
-                        isCurrent: player.currentTrack?.id == item.track.id
+                        isCurrent: player.currentTrack?.id == item.track.id,
+                        image: localLibrary.artwork(for: item.track.id)
                     )
                 }
                 .buttonStyle(.plain)
@@ -90,7 +117,14 @@ struct IndexedTrack: Identifiable {
 
 private struct ArtistHeader: View {
     let artist: CatalogArtist
+    let rankTotal: Int
     let onPlay: () -> Void
+
+    private var meta: String {
+        let plays: String = artist.plays == 1 ? "1 reproducción" : "\(artist.plays) reproducciones"
+        guard artist.plays > 0 else { return plays }
+        return artist.rank == 1 ? "\(plays) · tu más escuchado" : "\(plays) · nº \(artist.rank) más escuchado"
+    }
 
     var body: some View {
         VStack(spacing: 12) {
@@ -105,7 +139,7 @@ private struct ArtistHeader: View {
                 .multilineTextAlignment(.center)
                 .accessibilityAddTraits(.isHeader)
             Pill(text: artist.genre, background: Palette.ink.opacity(0.1), foreground: Palette.ink)
-            Text("\(artist.plays) reproducciones · nº \(artist.rank) más escuchado")
+            Text(meta)
                 .font(.footnote.weight(.medium))
                 .monospacedDigit()
             Button(action: onPlay) {

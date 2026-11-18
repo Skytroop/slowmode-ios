@@ -40,10 +40,11 @@ struct LibraryView: View {
     @State private var importOrigin: TrackOrigin = .localFile
     @State private var showsPicker: Bool = false
     @State private var importResult: ImportOutcome?
+    @State private var pendingDuplicates: ImportOutcome?
 
     var body: some View {
         @Bindable var navigation = navigation
-        let catalog: SampleCatalog = store.catalog
+        let catalog: SampleCatalog = localLibrary.userCatalog(community: store.catalog, myPresets: presetStore.communityPresets)
 
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -64,11 +65,11 @@ struct LibraryView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     SectionHeader(title: "Presets de Slow Mode guardados")
                     PresetListSection(
-                        presets: presetStore.communityPresets + catalog.presets.filter { library.isLiked(presetId: $0.id) },
+                        presets: presetStore.communityPresets + store.catalog.presets.filter { library.isLiked(presetId: $0.id) },
                         showsArtist: true,
                         showsControls: false,
                         emptyTitle: "Sin presets guardados",
-                        emptyMessage: "Guarda tu versión desde el panel de Slow Mode o dale a me gusta a un preset de la comunidad.",
+                        emptyMessage: "Guarda tu versión desde Reproduciendo o dale a me gusta a un preset de la comunidad.",
                         onDelete: { preset in presetStore.delete(presetId: preset.id) }
                     )
                 }
@@ -91,7 +92,7 @@ struct LibraryView: View {
         .alert("Nueva playlist", isPresented: $isNamingPlaylist) {
             TextField("Nombre", text: $newPlaylistName)
             Button("Crear") {
-                if library.createPlaylist(named: newPlaylistName) != nil {
+                if localLibrary.createPlaylist(named: newPlaylistName) != nil {
                     tile = .playlists
                 }
             }
@@ -118,6 +119,16 @@ struct LibraryView: View {
             }
         }
         .alert(
+            "Canciones repetidas",
+            isPresented: Binding(get: { pendingDuplicates != nil }, set: { if !$0 { pendingDuplicates = nil } }),
+            presenting: pendingDuplicates
+        ) { outcome in
+            Button("Importar igualmente") { resolveDuplicates(outcome, importAnyway: true) }
+            Button("Omitir", role: .cancel) { resolveDuplicates(outcome, importAnyway: false) }
+        } message: { outcome in
+            Text("Ya tienes en tu biblioteca: \(outcome.duplicates.joined(separator: ", ")). ¿Quieres importarlas otra vez?")
+        }
+        .alert(
             "Importación",
             isPresented: Binding(get: { importResult != nil }, set: { if !$0 { importResult = nil } }),
             presenting: importResult
@@ -127,6 +138,8 @@ struct LibraryView: View {
             Text(outcome.details)
         }
     }
+
+    // MARK: - Importar
 
     /// Al cerrarse la hoja de importar, abre el selector si se eligió una opción.
     private func openPickerIfChosen() {
@@ -141,16 +154,45 @@ struct LibraryView: View {
         let origin: TrackOrigin = importOrigin
         Task {
             let outcome: ImportOutcome = await localLibrary.importFiles(urls, origin: origin)
-            // Las copias temporales del selector ya no hacen falta.
-            for url in urls { try? FileManager.default.removeItem(at: url) }
-            importResult = outcome
+            // Las copias temporales del selector ya no hacen falta (salvo las repetidas, hasta que decidas).
+            let kept: Set<URL> = Set(outcome.duplicateURLs)
+            for url in urls where !kept.contains(url) {
+                try? FileManager.default.removeItem(at: url)
+            }
+            if outcome.duplicateURLs.isEmpty {
+                importResult = outcome
+            } else {
+                pendingDuplicates = outcome
+            }
         }
     }
 
-    /// Pistas importadas (suenan de verdad). Mantén pulsada una para eliminarla.
+    private func resolveDuplicates(_ outcome: ImportOutcome, importAnyway: Bool) {
+        let origin: TrackOrigin = importOrigin
+        Task {
+            var result: ImportOutcome = outcome
+            if importAnyway {
+                let extra: ImportOutcome = await localLibrary.importFiles(outcome.duplicateURLs, origin: origin, allowDuplicates: true)
+                result.imported += extra.imported
+                result.failures += extra.failures
+                result.duplicates = []
+            }
+            for url in outcome.duplicateURLs {
+                try? FileManager.default.removeItem(at: url)
+            }
+            result.duplicateURLs = []
+            // Deja que se cierre el primer aviso antes de mostrar el resultado.
+            try? await Task.sleep(for: .milliseconds(450))
+            importResult = result
+        }
+    }
+
+    // MARK: - Tu música
+
+    /// Todas tus pistas importadas. Mantén pulsada una para más opciones.
     @ViewBuilder
     private func yourMusic(_ catalog: SampleCatalog) -> some View {
-        let tracks: [CatalogTrack] = localLibrary.catalogTracks
+        let tracks: [CatalogTrack] = catalog.tracks
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "Tu música") {
                 if !tracks.isEmpty {
@@ -169,28 +211,52 @@ struct LibraryView: View {
                         .buttonStyle(.glassProminent)
                 }
             } else {
-                SurfaceList(items: tracks) { track in
-                    Button {
-                        player.play(track, in: tracks, from: "Tu música")
-                    } label: {
-                        TrackRow(
-                            title: track.title,
-                            subtitle: track.artist,
-                            artwork: ArtworkColors.forArtist(track.artistId, in: catalog),
-                            origin: track.origin,
-                            trailing: SlowModeFormat.duration(Double(track.duration)),
-                            isCurrent: player.currentTrack?.id == track.id,
-                            image: localLibrary.artwork(for: track.id)
-                        )
+                trackList(tracks, source: "Tu música", catalog: catalog)
+            }
+        }
+    }
+
+    private func trackList(_ tracks: [CatalogTrack], source: String, catalog: SampleCatalog) -> some View {
+        SurfaceList(items: tracks) { track in
+            Button {
+                player.play(track, in: tracks, from: source)
+            } label: {
+                TrackRow(
+                    title: track.title,
+                    subtitle: track.artist,
+                    artwork: ArtworkColors.forArtist(track.artistId, in: catalog),
+                    origin: track.origin,
+                    trailing: SlowModeFormat.duration(Double(track.duration)),
+                    isCurrent: player.currentTrack?.id == track.id,
+                    image: localLibrary.artwork(for: track.id)
+                )
+            }
+            .buttonStyle(.plain)
+            .contextMenu {
+                Button {
+                    localLibrary.toggleLike(catalogId: track.id)
+                } label: {
+                    if localLibrary.isLiked(catalogId: track.id) {
+                        Label("Quitar me gusta", systemImage: "heart.slash")
+                    } else {
+                        Label("Me gusta", systemImage: "heart")
                     }
-                    .buttonStyle(.plain)
-                    .contextMenu {
-                        Button(role: .destructive) {
-                            delete(track)
-                        } label: {
-                            Label("Eliminar de la biblioteca", systemImage: "trash")
+                }
+                if !localLibrary.playlists.isEmpty {
+                    Menu {
+                        ForEach(localLibrary.playlists) { playlist in
+                            Button(playlist.name) {
+                                localLibrary.add(trackCatalogId: track.id, to: playlist)
+                            }
                         }
+                    } label: {
+                        Label("Añadir a playlist", systemImage: "text.badge.plus")
                     }
+                }
+                Button(role: .destructive) {
+                    delete(track)
+                } label: {
+                    Label("Eliminar de la biblioteca", systemImage: "trash")
                 }
             }
         }
@@ -205,10 +271,12 @@ struct LibraryView: View {
         }
     }
 
+    // MARK: - Tiles
+
     private func count(for tile: LibraryTile, _ catalog: SampleCatalog) -> Int {
         switch tile {
-        case .liked: return catalog.tracks.filter { library.isLiked(trackId: $0.id) }.count
-        case .playlists: return library.playlists.count
+        case .liked: return localLibrary.likedTracks.count
+        case .playlists: return localLibrary.playlists.count
         case .albums: return catalog.albums.count
         case .artists: return catalog.artists.count
         }
@@ -232,70 +300,59 @@ struct LibraryView: View {
     private func tileContent(_ catalog: SampleCatalog) -> some View {
         switch tile {
         case .liked:
-            let liked: [CatalogTrack] = catalog.tracks.filter { library.isLiked(trackId: $0.id) }
+            let liked: [CatalogTrack] = localLibrary.likedTracks
             if liked.isEmpty {
                 ContentUnavailableView("Aún no te gusta ninguna canción", systemImage: "heart", description: Text("Toca el corazón en Reproduciendo para guardarla aquí."))
             } else {
-                SurfaceList(items: liked) { track in
-                    Button {
-                        player.play(track, in: liked, from: "Canciones que te gustan")
-                    } label: {
-                        TrackRow(
-                            title: track.title,
-                            subtitle: track.artist,
-                            artwork: ArtworkColors.forArtist(track.artistId, in: catalog),
-                            origin: track.origin,
-                            trailing: SlowModeFormat.duration(Double(track.duration)),
-                            isCurrent: player.currentTrack?.id == track.id
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
+                trackList(liked, source: "Canciones que te gustan", catalog: catalog)
             }
         case .playlists:
-            if library.playlists.isEmpty {
+            if localLibrary.playlists.isEmpty {
                 ContentUnavailableView("Sin playlists", systemImage: "music.note.list", description: Text("Crea una con el botón +."))
             } else {
-                SurfaceList(items: library.playlists) { playlist in
-                    Button {
-                        let tracks: [CatalogTrack] = playlist.trackIds.compactMap { catalog.track(id: $0) }
-                        if let first = tracks.first {
-                            player.play(first, in: tracks, from: playlist.name)
-                        }
-                    } label: {
+                SurfaceList(items: localLibrary.playlists) { playlist in
+                    NavigationLink(value: AppRoute.playlist(playlist.id)) {
                         EntityRow(
                             title: playlist.name,
-                            subtitle: "Por ti · \(playlist.trackIds.count) " + (playlist.trackIds.count == 1 ? "canción" : "canciones"),
-                            leading: .gradient(AnyShapeStyle(Palette.pinkGradient), symbol: "music.note.list")
+                            subtitle: playlist.trackIDs.count == 1 ? "1 canción" : "\(playlist.trackIDs.count) canciones",
+                            leading: .gradient(AnyShapeStyle(Palette.pinkGradient), symbol: "music.note.list"),
+                            showsChevron: true
                         )
                     }
                     .buttonStyle(.plain)
                 }
             }
         case .albums:
-            SurfaceList(items: catalog.albums) { album in
-                NavigationLink(value: AppRoute.artist(album.artistId)) {
-                    EntityRow(
-                        title: album.title,
-                        subtitle: "\(album.artist) · \(album.trackCount) " + (album.trackCount == 1 ? "canción" : "canciones"),
-                        leading: .artwork(ArtworkColors.forArtist(album.artistId, in: catalog)),
-                        showsChevron: true
-                    )
+            if catalog.albums.isEmpty {
+                ContentUnavailableView("Sin álbumes", systemImage: "square.stack", description: Text("Aparecerán cuando importes música."))
+            } else {
+                SurfaceList(items: catalog.albums) { album in
+                    NavigationLink(value: AppRoute.artist(album.artistId)) {
+                        EntityRow(
+                            title: album.title.isEmpty ? "Sin álbum" : album.title,
+                            subtitle: "\(album.artist) · \(album.trackCount) " + (album.trackCount == 1 ? "canción" : "canciones"),
+                            leading: .artwork(ArtworkColors.forArtist(album.artistId, in: catalog)),
+                            showsChevron: true
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
-                .disabled(catalog.artist(id: album.artistId) == nil)
             }
         case .artists:
-            SurfaceList(items: catalog.artists) { artist in
-                NavigationLink(value: AppRoute.artist(artist.id)) {
-                    EntityRow(
-                        title: artist.name,
-                        subtitle: "\(artist.genre) · \(artist.plays) reproducciones",
-                        leading: .avatar(initials: artist.initials, colors: ArtworkColors(hexBackground: artist.color, hexForeground: artist.onColor)),
-                        showsChevron: true
-                    )
+            if catalog.artists.isEmpty {
+                ContentUnavailableView("Sin artistas", systemImage: "music.mic", description: Text("Aparecerán cuando importes música."))
+            } else {
+                SurfaceList(items: catalog.artists) { artist in
+                    NavigationLink(value: AppRoute.artist(artist.id)) {
+                        EntityRow(
+                            title: artist.name,
+                            subtitle: "\(artist.genre) · \(artist.plays) reproducciones",
+                            leading: .avatar(initials: artist.initials, colors: ArtworkColors(hexBackground: artist.color, hexForeground: artist.onColor)),
+                            showsChevron: true
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
         }
     }
