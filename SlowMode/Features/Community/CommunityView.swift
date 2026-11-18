@@ -61,6 +61,8 @@ struct CommunityView: View {
             .padding(.bottom, 24)
         }
         .background(AmbientBackground())
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.communityView)
         .navigationTitle("Comunidad")
     }
 
@@ -101,7 +103,8 @@ private struct MixCard: View {
             }
             .foregroundStyle(ink)
             .padding(16)
-            .frame(width: 164, height: 164, alignment: .topLeading)
+            .frame(width: 164, alignment: .topLeading)
+            .frame(minHeight: 164, alignment: .topLeading)
             .background(fill, in: .rect(cornerRadius: Radius.card))
             .contentShape(.rect(cornerRadius: Radius.card))
         }

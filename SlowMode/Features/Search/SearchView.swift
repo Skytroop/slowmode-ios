@@ -34,6 +34,8 @@ struct SearchView: View {
         }
         .scrollDismissesKeyboard(.immediately)
         .background(AmbientBackground())
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.searchView)
         .navigationTitle("Buscar")
         .searchable(text: $query, prompt: "Artistas, canciones, presets")
         .onSubmit(of: .search) { remember(trimmedQuery) }

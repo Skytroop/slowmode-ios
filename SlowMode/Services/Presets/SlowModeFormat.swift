@@ -43,6 +43,47 @@ enum SlowModeFormat {
         return "\(modeName(tempo: settings.tempo)) · \(summary)"
     }
 
+    // MARK: - Formas habladas (VoiceOver)
+
+    /// 214 → "3 minutos 34 segundos", 45 → "45 segundos", 60 → "1 minuto"
+    static func spokenDuration(_ seconds: Double) -> String {
+        let total: Int = max(0, Int(seconds.rounded()))
+        let minutes: Int = total / 60
+        let secs: Int = total % 60
+        var parts: [String] = []
+        if minutes > 0 { parts.append(minutes == 1 ? "1 minuto" : "\(minutes) minutos") }
+        if secs > 0 || minutes == 0 { parts.append(secs == 1 ? "1 segundo" : "\(secs) segundos") }
+        return parts.joined(separator: " ")
+    }
+
+    /// 0.85 → "velocidad 0,85"
+    static func spokenTempo(_ tempo: Double) -> String {
+        "velocidad " + String(format: "%.2f", locale: Locale(identifier: "en_US_POSIX"), tempo)
+            .replacingOccurrences(of: ".", with: ",")
+    }
+
+    /// −2 → "2 semitonos más grave", 3 → "3 semitonos más agudo", 0 → "tono original"
+    static func spokenPitch(_ semitones: Int) -> String {
+        let amount: Int = abs(semitones)
+        let unit: String = amount == 1 ? "semitono" : "semitonos"
+        if semitones < 0 { return "\(amount) \(unit) más grave" }
+        if semitones > 0 { return "\(amount) \(unit) más agudo" }
+        return "tono original"
+    }
+
+    /// Ajustes completos, para leer en voz alta: "velocidad 0,85, 2 semitonos más grave, 20 % de reverb".
+    static func spokenSettings(tempo: Double, pitch: Int, reverb: Int) -> String {
+        var parts: [String] = [spokenTempo(tempo), spokenPitch(pitch)]
+        if reverb > 0 { parts.append("\(reverb) % de reverb") }
+        return parts.joined(separator: ", ")
+    }
+
+    /// Etiqueta de la portada en voz alta. `nil` si Slow Mode está desactivado o no cambia nada.
+    static func spokenBadge(for settings: SlowSettings) -> String? {
+        guard settings.summary != nil else { return nil }
+        return "\(modeName(tempo: settings.tempo)): " + spokenSettings(tempo: settings.tempo, pitch: settings.displayedPitch, reverb: settings.reverb)
+    }
+
     /// 214 → "3:34"
     static func duration(_ seconds: Double) -> String {
         let total: Int = max(0, Int(seconds.rounded()))

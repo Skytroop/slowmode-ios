@@ -38,6 +38,7 @@ struct LoopSheet: View {
                             .frame(minHeight: 44)
                     }
                     .disabled(!isValid)
+                    .accessibilityHint(isValid ? "" : "El fin tiene que ir al menos 1 segundo después del inicio")
 
                     if player.loopRange != nil {
                         Button(role: .destructive) {

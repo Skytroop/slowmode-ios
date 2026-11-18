@@ -64,7 +64,8 @@ struct QueueSheet: View {
             artwork: ArtworkColors.forArtist(track.artistId, in: store.catalog),
             trailing: SlowModeFormat.duration(Double(track.duration)),
             isCurrent: player.currentTrack?.id == track.id,
-            image: localLibrary.artwork(for: track.id)
+            image: localLibrary.artwork(for: track.id),
+            trailingSpoken: SlowModeFormat.spokenDuration(Double(track.duration))
         )
     }
 }

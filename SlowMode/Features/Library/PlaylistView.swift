@@ -65,7 +65,8 @@ struct PlaylistView: View {
                                         artwork: ArtworkColors.forArtist(track.artistId, in: catalog),
                                         trailing: SlowModeFormat.duration(Double(track.duration)),
                                         isCurrent: player.currentTrack?.id == track.id,
-                                        image: localLibrary.artwork(for: track.id)
+                                        image: localLibrary.artwork(for: track.id),
+                                        trailingSpoken: SlowModeFormat.spokenDuration(Double(track.duration))
                                     )
                                 }
                                 .buttonStyle(.plain)
@@ -107,6 +108,8 @@ struct PlaylistView: View {
                 ContentUnavailableView("Playlist no encontrada", systemImage: "music.note.list")
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.playlistView)
         .background(AmbientBackground())
         .navigationBarTitleDisplayMode(.inline)
     }

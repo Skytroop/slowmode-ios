@@ -110,6 +110,16 @@ struct RootView: View {
         player.listeningObserver = { tick in localLibrary.handle(tick) }
         catalogStore.load()
 
+        if DemoContent.isEnabled {
+            // Pruebas de interfaz: unas pistas de silencio para recorrer todas las pantallas.
+            let player: PlayerController = player
+            Task {
+                _ = await localLibrary.importFiles(DemoContent.makeTracks(), origin: .localFile)
+                player.prepareIfIdle(with: localLibrary.catalogTracks, source: "Tu música")
+            }
+            return
+        }
+
         // El minirreproductor arranca con tu música (si aún no has importado nada, queda vacío).
         player.prepareIfIdle(with: localLibrary.catalogTracks, source: "Tu música")
     }

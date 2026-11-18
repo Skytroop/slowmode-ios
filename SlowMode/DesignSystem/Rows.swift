@@ -61,6 +61,17 @@ struct TrackRow: View {
     var trailing: String? = nil
     var isCurrent: Bool = false
     var image: UIImage? = nil
+    /// Forma hablada del dato de la derecha (p. ej. la duración "3 minutos 34 segundos").
+    var trailingSpoken: String? = nil
+
+    private var spokenLabel: String {
+        var parts: [String] = [title]
+        if isCurrent { parts.append("sonando") }
+        if let origin { parts.append(origin == .localFile ? "Archivo local" : "Original subido") }
+        if !subtitle.isEmpty { parts.append(subtitle) }
+        if let spoken = trailingSpoken ?? trailing { parts.append(spoken) }
+        return parts.joined(separator: ", ")
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -95,6 +106,8 @@ struct TrackRow: View {
         .padding(.vertical, 8)
         .frame(minHeight: 56)
         .contentShape(.rect)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spokenLabel)
     }
 }
 

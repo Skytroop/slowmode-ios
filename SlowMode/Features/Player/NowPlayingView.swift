@@ -68,6 +68,8 @@ struct NowPlayingView: View {
             }
         }
         .foregroundStyle(Palette.textPrimary)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.nowPlayingView)
         .preferredColorScheme(.dark)
         .overlay(alignment: .bottom) {
             if let toast {
@@ -125,7 +127,7 @@ struct NowPlayingView: View {
         .buttonStyle(.plain)
         .animation(reduceMotion ? nil : .spring(duration: 0.45), value: isPanelExpanded)
         .accessibilityLabel("Portada de \(track.title)")
-        .accessibilityValue(SlowModeFormat.badge(for: player.slow) ?? "Sin Slow Mode")
+        .accessibilityValue(SlowModeFormat.spokenBadge(for: player.slow) ?? "Sin Slow Mode")
         .accessibilityHint(isPanelExpanded ? "Amplía la portada y pliega el panel" : "")
     }
 
@@ -139,7 +141,8 @@ struct NowPlayingView: View {
         }
         .buttonStyle(.plain)
         .glassEffect(.regular.interactive(), in: .circle)
-        .accessibilityLabel("Cerrar")
+        .accessibilityIdentifier(AccessibilityID.nowPlayingClose)
+        .accessibilityLabel("Cerrar Reproduciendo")
     }
 
     private var topBar: some View {
@@ -216,7 +219,8 @@ struct NowPlayingView: View {
             ) {
                 Text("Posición")
             }
-            .accessibilityValue("\(SlowModeFormat.duration(player.displayedElapsed)) de \(SlowModeFormat.duration(player.displayedDuration))")
+            .accessibilityIdentifier(AccessibilityID.nowPlayingProgress)
+            .accessibilityValue("\(SlowModeFormat.spokenDuration(player.displayedElapsed)) de \(SlowModeFormat.spokenDuration(player.displayedDuration))")
             HStack {
                 Text(SlowModeFormat.duration(player.displayedElapsed))
                 Spacer()
@@ -312,6 +316,7 @@ struct NowPlayingView: View {
                     .frame(width: 76, height: 76)
             }
             .glassEffect(.regular.tint(Palette.periwinkle).interactive(), in: .circle)
+            .accessibilityIdentifier(AccessibilityID.nowPlayingPlayPause)
             .accessibilityLabel(player.isPlaying ? "Pausa" : "Reproducir")
 
             Spacer()
@@ -357,6 +362,7 @@ struct NowPlayingView: View {
                     .contentShape(.rect)
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier(AccessibilityID.nowPlayingLoop)
             .accessibilityLabel("Repetir fragmento")
             .accessibilityValue(player.loopRange == nil ? "Desactivado" : "Activado")
             Spacer()
@@ -367,6 +373,7 @@ struct NowPlayingView: View {
                     .frame(width: 44, height: 44)
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier(AccessibilityID.nowPlayingQueue)
             .accessibilityLabel("A continuación")
         }
     }

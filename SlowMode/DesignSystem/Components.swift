@@ -35,6 +35,9 @@ struct PresetPills: View {
                 Pill(text: SlowModeFormat.reverb(reverb))
             }
         }
+        // "0.85× −2 st" se leería como cifras sueltas: se lee la forma hablada.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(SlowModeFormat.spokenSettings(tempo: tempo, pitch: pitch, reverb: reverb))
     }
 }
 

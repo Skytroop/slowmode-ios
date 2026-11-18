@@ -55,6 +55,7 @@ struct LibraryView: View {
                         .frame(maxWidth: .infinity, minHeight: 44)
                 }
                 .buttonStyle(.glass)
+                .accessibilityIdentifier(AccessibilityID.libraryImport)
 
                 yourMusic(catalog)
 
@@ -77,6 +78,8 @@ struct LibraryView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.libraryView)
         .background(AmbientBackground())
         .navigationTitle("Biblioteca")
         .toolbar {
@@ -87,6 +90,7 @@ struct LibraryView: View {
                 } label: {
                     Label("Crear playlist", systemImage: "plus")
                 }
+                .accessibilityIdentifier(AccessibilityID.libraryCreatePlaylist)
             }
         }
         .alert("Nueva playlist", isPresented: $isNamingPlaylist) {
@@ -218,7 +222,8 @@ struct LibraryView: View {
                     origin: track.origin,
                     trailing: SlowModeFormat.duration(Double(track.duration)),
                     isCurrent: player.currentTrack?.id == track.id,
-                    image: localLibrary.artwork(for: track.id)
+                    image: localLibrary.artwork(for: track.id),
+                    trailingSpoken: SlowModeFormat.spokenDuration(Double(track.duration))
                 )
             }
             .buttonStyle(.plain)

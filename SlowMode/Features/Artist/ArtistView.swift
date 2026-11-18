@@ -73,6 +73,8 @@ struct ArtistView: View {
                 ContentUnavailableView("Artista no encontrado", systemImage: "person.slash", description: Text("Puede que hayas borrado sus canciones."))
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.artistView)
         .background(AmbientBackground())
         .navigationBarTitleDisplayMode(.inline)
     }

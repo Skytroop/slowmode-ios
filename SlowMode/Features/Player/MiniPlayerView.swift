@@ -32,10 +32,9 @@ struct MiniPlayerView: View {
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
-                .accessibilityElement(children: .ignore)
+                .accessibilityIdentifier(AccessibilityID.miniPlayerOpen)
                 .accessibilityLabel("\(track.title), \(subtitle)")
                 .accessibilityHint("Abre Reproduciendo")
-                .accessibilityAddTraits(.isButton)
 
                 if player.slow.isEnabled {
                     Button {
@@ -46,7 +45,8 @@ struct MiniPlayerView: View {
                             .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Slow Mode a \(SlowModeFormat.tempo(player.slow.tempo))")
+                    .accessibilityIdentifier(AccessibilityID.miniPlayerSpeed)
+                    .accessibilityLabel("Slow Mode, \(SlowModeFormat.spokenTempo(player.slow.tempo))")
                     .accessibilityHint("Desactiva Slow Mode")
                 }
 
@@ -59,6 +59,7 @@ struct MiniPlayerView: View {
                         .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier(AccessibilityID.miniPlayerPlayPause)
                 .accessibilityLabel(player.isPlaying ? "Pausa" : "Reproducir")
             }
             .padding(.horizontal, 12)

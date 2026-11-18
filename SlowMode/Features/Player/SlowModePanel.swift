@@ -81,6 +81,7 @@ struct SlowModePanel: View {
             )
             .labelsHidden()
             .tint(Palette.periwinkle)
+            .accessibilityIdentifier(AccessibilityID.slowModeToggle)
             .accessibilityLabel("Slow Mode")
 
             Button {
@@ -92,6 +93,7 @@ struct SlowModePanel: View {
                     .frame(width: 44, height: 44)
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier(AccessibilityID.slowModeExpand)
             .accessibilityLabel(isExpanded ? "Plegar Slow Mode" : "Desplegar Slow Mode")
         }
     }
@@ -106,6 +108,7 @@ struct SlowModePanel: View {
                     range: SlowModeMath.tempoRange,
                     step: SlowModeMath.tempoStep,
                     showsCenterMark: true,
+                    spokenValue: SlowModeFormat.spokenTempo(player.slow.tempo),
                     decrementLabel: "Reducir tempo",
                     incrementLabel: "Aumentar tempo",
                     onDecrement: { player.slow.setTempo(player.slow.tempo - 0.01) },
@@ -121,6 +124,8 @@ struct SlowModePanel: View {
                     range: -12...12,
                     step: 1,
                     isDisabled: player.slow.isLinked,
+                    spokenValue: SlowModeFormat.spokenPitch(player.slow.displayedPitch)
+                        + (player.slow.isLinked ? ", vinculado al tempo" : ""),
                     decrementLabel: "Bajar tono",
                     incrementLabel: "Subir tono",
                     onDecrement: { player.slow.setPitch(player.slow.pitch - 1) },
@@ -135,6 +140,7 @@ struct SlowModePanel: View {
                     ),
                     range: 0...100,
                     step: 5,
+                    spokenValue: "\(player.slow.reverb) por ciento",
                     decrementLabel: "Menos reverb",
                     incrementLabel: "Más reverb",
                     onDecrement: { player.slow.setReverb(player.slow.reverb - 5) },
@@ -153,6 +159,7 @@ struct SlowModePanel: View {
             }
             .disabled(!player.slow.isEnabled)
             .opacity(player.slow.isEnabled ? 1 : 0.5)
+            .accessibilityHint(player.slow.isEnabled ? "" : "Activa Slow Mode para cambiar estos ajustes")
 
             HStack(spacing: 8) {
                 Button {
@@ -166,8 +173,11 @@ struct SlowModePanel: View {
                 .buttonStyle(.glassProminent)
                 .tint(Palette.periwinkle)
                 .disabled(player.slow.summary == nil)
+                .accessibilityIdentifier(AccessibilityID.slowModeSave)
                 .accessibilityLabel("Guardar preset")
-                .accessibilityHint("Guarda estos ajustes para esta canción")
+                .accessibilityHint(player.slow.summary == nil
+                    ? "Disponible cuando Slow Mode cambia algo"
+                    : "Guarda estos ajustes para esta canción")
 
                 if let track = player.currentTrack {
                     let file = PresetFile(name: PresetStore.suggestedName(for: player.slow), settings: player.slow, track: track)
@@ -208,6 +218,8 @@ struct SlowSliderRow: View {
     let step: Double
     var showsCenterMark: Bool = false
     var isDisabled: Bool = false
+    /// Valor para VoiceOver si el visible no se lee bien ("0.85×" → "velocidad 0,85").
+    var spokenValue: String? = nil
     let decrementLabel: String
     let incrementLabel: String
     let onDecrement: () -> Void
@@ -231,7 +243,7 @@ struct SlowSliderRow: View {
                 Slider(value: $value, in: range, step: step) {
                     Text(title)
                 }
-                .accessibilityValue(valueText)
+                .accessibilityValue(spokenValue ?? valueText)
                 .overlay {
                     if showsCenterMark {
                         Capsule()

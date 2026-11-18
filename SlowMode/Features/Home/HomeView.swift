@@ -47,6 +47,8 @@ struct HomeView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier(AccessibilityID.homeView)
         .background(AmbientBackground())
         .toolbar(.hidden, for: .navigationBar)
     }
