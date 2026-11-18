@@ -53,6 +53,8 @@ final class SlowPreset {
 enum MinePresetID {
     static let prefix: String = "mine-"
     static let creator: String = "tú"
+    /// Autor de los presets recibidos sin nombre de creador.
+    static let receivedCreator: String = "recibido"
 
     static func uuid(from presetId: String) -> UUID? {
         guard presetId.hasPrefix(prefix) else { return nil }
@@ -78,7 +80,7 @@ extension SlowPreset {
             track: PresetTrackReference(title: trackTitle, artist: trackArtist, duration: trackDuration),
             trackId: nil,
             artistId: nil,
-            creator: PresetCreator(handle: creator, color: "#B9C8F2", onColor: "#101014"),
+            creator: PresetCreator(handle: creator, color: isMine ? "#B9C8F2" : "#F1C4DF", onColor: "#101014"),
             uses: uses,
             likes: likes,
             createdAt: createdAt

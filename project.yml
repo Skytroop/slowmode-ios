@@ -23,6 +23,20 @@ targets:
         UILaunchScreen: {}
         UIBackgroundModes: [audio]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        # Presets compartidos (.slowpreset): solo ajustes, nunca audio. iOS copia el archivo a la app al abrirlo.
+        LSSupportsOpeningDocumentsInPlace: false
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.slowmode.preset
+            UTTypeDescription: Preset de Slow Mode
+            UTTypeConformsTo: [public.json, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [slowpreset]
+              public.mime-type: [application/x-slowmode-preset]
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Preset de Slow Mode
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Owner
+            LSItemContentTypes: [com.slowmode.preset]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.slowmode.app

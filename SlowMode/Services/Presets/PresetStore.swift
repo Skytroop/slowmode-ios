@@ -60,9 +60,62 @@ final class PresetStore {
 
     /// Borra a partir del id con forma de comunidad (`mine-<uuid>`).
     func delete(presetId: String) {
-        guard let uuid = MinePresetID.uuid(from: presetId),
-              let preset = presets.first(where: { $0.id == uuid }) else { return }
+        guard let preset = preset(presetId: presetId) else { return }
         delete(preset)
+    }
+
+    func preset(presetId: String) -> SlowPreset? {
+        guard let uuid = MinePresetID.uuid(from: presetId) else { return nil }
+        return presets.first { $0.id == uuid }
+    }
+
+    /// Cambia el nombre. Devuelve `false` si el nombre está vacío.
+    @discardableResult
+    func rename(_ preset: SlowPreset, to name: String) -> Bool {
+        let trimmed: String = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        preset.name = String(trimmed.prefix(60))
+        try? context.save()
+        reload()
+        return true
+    }
+
+    @discardableResult
+    func rename(presetId: String, to name: String) -> Bool {
+        guard let preset = preset(presetId: presetId) else { return false }
+        return rename(preset, to: name)
+    }
+
+    /// Guarda un preset recibido (archivo `.slowpreset`). Si ya lo tenías igual, devuelve el existente.
+    @discardableResult
+    func saveReceived(_ file: PresetFile) -> SlowPreset {
+        if let existing = presets.first(where: { preset in
+            preset.name == file.name
+                && abs(preset.tempo - file.tempo) < 0.001
+                && preset.pitch == file.pitch
+                && preset.reverb == file.reverb
+                && preset.linked == file.linked
+                && SampleCatalog.sameText(preset.trackTitle, file.track.title)
+                && SampleCatalog.sameText(preset.trackArtist, file.track.artist)
+        }) {
+            return existing
+        }
+        let preset = SlowPreset(
+            name: file.name,
+            tempo: file.tempo,
+            pitch: file.pitch,
+            reverb: file.reverb,
+            linked: file.linked,
+            trackTitle: file.track.title,
+            trackArtist: file.track.artist,
+            trackDuration: file.track.duration,
+            creator: file.creator ?? MinePresetID.receivedCreator
+        )
+        preset.isMine = false
+        context.insert(preset)
+        try? context.save()
+        reload()
+        return preset
     }
 
     /// Nombre propuesto: el del preset rápido si coincide; si no, según la velocidad.
