@@ -12,6 +12,8 @@ struct NowPlayingView: View {
     @State private var showsQueue: Bool = false
     @State private var showsAddToPlaylist: Bool = false
     @State private var showsTrackPresets: Bool = false
+    @State private var showsLoop: Bool = false
+    @State private var toast: String?
 
     var body: some View {
         let catalog: SampleCatalog = store.catalog
@@ -24,34 +26,41 @@ struct NowPlayingView: View {
                     colors: [colors.background, Palette.pinkEnd, colors.background],
                     isMoving: player.isPlaying
                 )
-                ScrollView {
-                    VStack(spacing: 22) {
-                        topBar
-                        TrackArtwork(
-                            colors: colors,
-                            image: localLibrary.artwork(for: track.id),
-                            size: isPanelExpanded ? 168 : 300,
-                            cornerRadius: Radius.card
-                        )
-                            .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
-                            .animation(reduceMotion ? nil : .spring(duration: 0.45), value: isPanelExpanded)
-                        titleBlock(track)
-                        progress
-                        transport
-                        outputRow
-                        SlowModePanel(
-                            isExpanded: $isPanelExpanded,
-                            trackDuration: player.duration,
-                            presetCount: catalog.presets(forTrack: track).count,
-                            onShowPresets: { showsTrackPresets = true }
-                        )
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 22) {
+                            topBar
+                                .id(Self.topAnchor)
+                            artwork(track, colors: colors) {
+                                // Tocar la portada: plegar el panel y volver arriba. Slow Mode sigue activo.
+                                animate { isPanelExpanded = false }
+                                animate { proxy.scrollTo(Self.topAnchor, anchor: .top) }
+                            }
+                            titleBlock(track)
+                            progress
+                            transport
+                            outputRow
+                            SlowModePanel(
+                                isExpanded: $isPanelExpanded,
+                                trackDuration: player.duration,
+                                presetCount: catalog.presets(forTrack: track).count,
+                                onShowPresets: { showsTrackPresets = true },
+                                onSaved: { name in showToast("Preset «\(name)» guardado") }
+                            )
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 32)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 32)
+                    .scrollIndicators(.hidden)
                 }
-                .scrollIndicators(.hidden)
                 .sheet(isPresented: $showsTrackPresets) {
                     TrackPresetsSheet(track: track)
+                }
+                .sheet(isPresented: $showsLoop) {
+                    LoopSheet(
+                        start: player.loopRange?.lowerBound ?? player.position.rounded(.down),
+                        end: player.loopRange?.upperBound ?? min(player.position.rounded(.down) + 10, player.duration)
+                    )
                 }
             } else {
                 ContentUnavailableView("Nada sonando", systemImage: "music.note")
@@ -60,8 +69,64 @@ struct NowPlayingView: View {
         }
         .foregroundStyle(Palette.textPrimary)
         .preferredColorScheme(.dark)
+        .overlay(alignment: .bottom) {
+            if let toast {
+                Text(toast)
+                    .font(.subheadline.weight(.medium))
+                    .padding(.horizontal, 18)
+                    .frame(minHeight: 40)
+                    .glassEffect(.regular, in: .capsule)
+                    .padding(.bottom, 24)
+                    .transition(.opacity)
+                    .accessibilityAddTraits(.isStaticText)
+            }
+        }
         .sheet(isPresented: $showsQueue) { QueueSheet() }
         .sheet(isPresented: $showsAddToPlaylist) { AddToPlaylistSheet() }
+    }
+
+    private static let topAnchor: String = "nowPlayingTop"
+
+    private func animate(_ change: () -> Void) {
+        if reduceMotion {
+            change()
+        } else {
+            withAnimation(.spring(duration: 0.45)) { change() }
+        }
+    }
+
+    private func showToast(_ message: String) {
+        animate { toast = message }
+        AccessibilityNotification.Announcement(message).post()
+        Task {
+            try? await Task.sleep(for: .seconds(2.2))
+            if toast == message { animate { toast = nil } }
+        }
+    }
+
+    /// Portada (se encoge con el panel abierto). Con Slow Mode activo lleva una etiqueta con los ajustes.
+    private func artwork(_ track: CatalogTrack, colors: ArtworkColors, onTap: @escaping () -> Void) -> some View {
+        Button(action: onTap) {
+            TrackArtwork(
+                colors: colors,
+                image: localLibrary.artwork(for: track.id),
+                size: isPanelExpanded ? 168 : 300,
+                cornerRadius: Radius.card
+            )
+            .overlay(alignment: .bottomLeading) {
+                if let badge = SlowModeFormat.badge(for: player.slow) {
+                    Pill(text: badge, background: Palette.periwinkle, foreground: Palette.ink)
+                        .padding(12)
+                        .opacity(isPanelExpanded ? 0 : 1)
+                }
+            }
+            .shadow(color: .black.opacity(0.35), radius: 24, y: 12)
+        }
+        .buttonStyle(.plain)
+        .animation(reduceMotion ? nil : .spring(duration: 0.45), value: isPanelExpanded)
+        .accessibilityLabel("Portada de \(track.title)")
+        .accessibilityValue(SlowModeFormat.badge(for: player.slow) ?? "Sin Slow Mode")
+        .accessibilityHint(isPanelExpanded ? "Amplía la portada y pliega el panel" : "")
     }
 
     private var closeButton: some View {
@@ -165,7 +230,56 @@ struct NowPlayingView: View {
             .monospacedDigit()
             .foregroundStyle(Palette.textSecondary)
             .accessibilityHidden(true)
+
+            if let loop = player.loopRange {
+                loopRegion(loop)
+                HStack(spacing: 8) {
+                    Button {
+                        showsLoop = true
+                    } label: {
+                        Label(
+                            "Fragmento \(SlowModeFormat.duration(loop.lowerBound))–\(SlowModeFormat.duration(loop.upperBound))",
+                            systemImage: "repeat"
+                        )
+                        .font(.footnote.weight(.semibold))
+                        .monospacedDigit()
+                        .foregroundStyle(Palette.ink)
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 32)
+                        .background(Palette.periwinkle, in: .capsule)
+                        .frame(minHeight: 44)
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Edita el fragmento que se repite")
+
+                    Button {
+                        player.clearLoop()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(Palette.textSecondary)
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Quitar fragmento")
+                    Spacer()
+                }
+            }
         }
+    }
+
+    /// Marca bajo la barra la zona que se repite.
+    private func loopRegion(_ loop: ClosedRange<Double>) -> some View {
+        let total: Double = max(player.duration, 1)
+        return GeometryReader { proxy in
+            Capsule()
+                .fill(Palette.periwinkle)
+                .frame(width: max(4, proxy.size.width * (loop.upperBound - loop.lowerBound) / total), height: 4)
+                .offset(x: proxy.size.width * loop.lowerBound / total)
+        }
+        .frame(height: 4)
+        .accessibilityHidden(true)
     }
 
     private var transport: some View {
@@ -235,6 +349,20 @@ struct NowPlayingView: View {
             RoutePickerButton()
                 .frame(width: 44, height: 44)
                 .accessibilityLabel("Salida de audio")
+            Spacer()
+            Button {
+                showsLoop = true
+            } label: {
+                Label("Fragmento", systemImage: "arrow.left.and.right")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(player.loopRange == nil ? Palette.textPrimary : Palette.periwinkle)
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Repetir fragmento")
+            .accessibilityValue(player.loopRange == nil ? "Desactivado" : "Activado")
             Spacer()
             Button {
                 showsQueue = true

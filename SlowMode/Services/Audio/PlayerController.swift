@@ -45,6 +45,9 @@ final class PlayerController {
     var repeatMode: RepeatMode = .off
     var isNowPlayingPresented: Bool = false
     private(set) var playbackError: String?
+    /// Fragmento que se repite (segundos de la pista original). Se quita al cambiar de pista.
+    private(set) var loopRange: ClosedRange<Double>?
+    static let minimumLoopLength: Double = 1
 
     /// Devuelve el archivo de audio de una pista (solo las importadas tienen).
     @ObservationIgnored var fileURLProvider: (CatalogTrack) -> URL? = { _ in nil }
@@ -148,10 +151,34 @@ final class PlayerController {
         }
     }
 
+    /// Con un fragmento activo, la posición se mantiene dentro de él.
     func seek(to seconds: Double) {
-        position = min(max(seconds, 0), duration)
+        var target: Double = min(max(seconds, 0), duration)
+        if let loop = loopRange {
+            target = min(max(target, loop.lowerBound), loop.upperBound)
+        }
+        position = target
         if usesEngine { engine?.seek(to: position) }
         updateNowPlaying()
+    }
+
+    /// Repite de `start` a `end` (segundos de la pista original). Devuelve `false` si el fragmento es demasiado corto.
+    @discardableResult
+    func setLoop(start: Double, end: Double) -> Bool {
+        let lower: Double = min(max(start, 0), duration)
+        let upper: Double = min(max(end, 0), duration)
+        guard upper - lower >= Self.minimumLoopLength else { return false }
+        loopRange = lower...upper
+        if position < lower || position >= upper { position = lower }
+        if usesEngine { engine?.setLoop(loopRange) }
+        updateNowPlaying()
+        return true
+    }
+
+    func clearLoop() {
+        guard loopRange != nil else { return }
+        loopRange = nil
+        if usesEngine { engine?.setLoop(nil) }
     }
 
     func setSlowMode(enabled: Bool) {
@@ -175,6 +202,10 @@ final class PlayerController {
             return
         }
         position += seconds * slow.effectiveTempo
+        if let loop = loopRange, position >= loop.upperBound {
+            position = loop.lowerBound
+            return
+        }
         if position >= duration {
             handleTrackEnd()
         }
@@ -186,6 +217,7 @@ final class PlayerController {
         if currentTrack?.id != track.id { activePreset = nil }
         currentTrack = track
         position = 0
+        loopRange = nil
         usesEngine = false
         guard let engine else { return }
         guard let url = fileURLProvider(track) else {

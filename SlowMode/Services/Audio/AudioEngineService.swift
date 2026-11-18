@@ -52,6 +52,8 @@ protocol PlaybackEngine: AnyObject {
     func stop()
     func seek(to seconds: Double)
     func apply(_ parameters: EngineParameters)
+    /// Repite un fragmento (segundos de la pista original) sin cortes. `nil` lo quita.
+    func setLoop(_ range: ClosedRange<Double>?)
 }
 
 /// Grafo: AVAudioPlayerNode → AVAudioUnitTimePitch → AVAudioUnitReverb → mainMixerNode.
@@ -68,6 +70,10 @@ final class AudioEngineService: PlaybackEngine {
     private var file: AVAudioFile?
     /// Frame del archivo donde empieza el segmento programado (tras un seek).
     private var segmentStartFrame: AVAudioFramePosition = 0
+    /// Frames del primer segmento programado (hasta el final del archivo o del fragmento).
+    private var firstSegmentLength: AVAudioFramePosition = 0
+    /// Fragmento en bucle, en frames del archivo.
+    private var loopFrames: (start: AVAudioFramePosition, end: AVAudioFramePosition)?
     /// Invalida las notificaciones de fin de segmentos antiguos (seek, cambio de pista).
     private var scheduleToken: Int = 0
     private var wantsToPlay: Bool = false
@@ -93,11 +99,37 @@ final class AudioEngineService: PlaybackEngine {
     var currentTime: Double {
         guard let file else { return 0 }
         let sampleRate: Double = file.processingFormat.sampleRate
-        var frame: AVAudioFramePosition = segmentStartFrame
+        var played: AVAudioFramePosition = 0
         if let nodeTime = playerNode.lastRenderTime, let playerTime = playerNode.playerTime(forNodeTime: nodeTime) {
-            frame += max(0, playerTime.sampleTime)
+            played = max(0, playerTime.sampleTime)
+        }
+        let frame: AVAudioFramePosition
+        if let loop = loopFrames, played >= firstSegmentLength {
+            let length: AVAudioFramePosition = max(1, loop.end - loop.start)
+            frame = loop.start + (played - firstSegmentLength) % length
+        } else {
+            frame = segmentStartFrame + played
         }
         return min(Double(frame), Double(file.length)) / sampleRate
+    }
+
+    func setLoop(_ range: ClosedRange<Double>?) {
+        guard let file else {
+            loopFrames = nil
+            return
+        }
+        let sampleRate: Double = file.processingFormat.sampleRate
+        let time: Double = currentTime
+        if let range {
+            let start: AVAudioFramePosition = min(max(0, AVAudioFramePosition(range.lowerBound * sampleRate)), max(0, file.length - 1))
+            let end: AVAudioFramePosition = min(max(start + 1, AVAudioFramePosition(range.upperBound * sampleRate)), file.length)
+            loopFrames = (start, end)
+        } else {
+            loopFrames = nil
+        }
+        playerNode.stop()
+        schedule(from: AVAudioFramePosition(time * sampleRate))
+        if wantsToPlay { playerNode.play() }
     }
 
     func load(url: URL) throws {
@@ -114,6 +146,7 @@ final class AudioEngineService: PlaybackEngine {
             if wasRunning { try? engine.start() }
         }
         file = newFile
+        loopFrames = nil
         schedule(from: 0)
     }
 
@@ -140,6 +173,7 @@ final class AudioEngineService: PlaybackEngine {
         scheduleToken += 1
         playerNode.stop()
         file = nil
+        loopFrames = nil
         segmentStartFrame = 0
     }
 
@@ -182,14 +216,41 @@ final class AudioEngineService: PlaybackEngine {
         guard let file else { return }
         scheduleToken += 1
         let token: Int = scheduleToken
+
+        if let loop = loopFrames {
+            // Primer tramo desde la posición (si está dentro del fragmento) y siempre una vuelta más en cola:
+            // cada vuelta consumida programa la siguiente, así no hay hueco entre repeticiones.
+            let start: AVAudioFramePosition = (frame >= loop.start && frame < loop.end) ? frame : loop.start
+            segmentStartFrame = start
+            firstSegmentLength = loop.end - start
+            scheduleLoopSegment(from: start, to: loop.end, token: token)
+            scheduleLoopSegment(from: loop.start, to: loop.end, token: token)
+            return
+        }
+
         segmentStartFrame = frame
         let remaining: AVAudioFramePosition = file.length - frame
+        firstSegmentLength = max(0, remaining)
         guard remaining > 0 else { return }
-        Self.scheduleSegment(on: playerNode, file: file, from: frame, count: AVAudioFrameCount(remaining)) { [weak self] in
+        Self.scheduleSegment(on: playerNode, file: file, from: frame, count: AVAudioFrameCount(remaining), callbackType: .dataPlayedBack) { [weak self] in
             Task { @MainActor in
                 self?.segmentFinished(token: token)
             }
         }
+    }
+
+    private func scheduleLoopSegment(from start: AVAudioFramePosition, to end: AVAudioFramePosition, token: Int) {
+        guard let file, end > start else { return }
+        Self.scheduleSegment(on: playerNode, file: file, from: start, count: AVAudioFrameCount(end - start), callbackType: .dataConsumed) { [weak self] in
+            Task { @MainActor in
+                self?.loopSegmentConsumed(token: token)
+            }
+        }
+    }
+
+    private func loopSegmentConsumed(token: Int) {
+        guard token == scheduleToken, let loop = loopFrames else { return }
+        scheduleLoopSegment(from: loop.start, to: loop.end, token: token)
     }
 
     /// Fuera del actor principal para que el callback (que llega en otro hilo) no herede `@MainActor`.
@@ -198,9 +259,10 @@ final class AudioEngineService: PlaybackEngine {
         file: AVAudioFile,
         from frame: AVAudioFramePosition,
         count: AVAudioFrameCount,
+        callbackType: AVAudioPlayerNodeCompletionCallbackType,
         completion: @escaping @Sendable () -> Void
     ) {
-        node.scheduleSegment(file, startingFrame: frame, frameCount: count, at: nil, completionCallbackType: .dataPlayedBack) { _ in
+        node.scheduleSegment(file, startingFrame: frame, frameCount: count, at: nil, completionCallbackType: callbackType) { _ in
             completion()
         }
     }
