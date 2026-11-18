@@ -22,6 +22,8 @@ final class FakeEngine: PlaybackEngine {
     func stop() {}
     func seek(to seconds: Double) { seeks.append(seconds) }
     func apply(_ parameters: EngineParameters) { applied.append(parameters) }
+    var loops: [ClosedRange<Double>?] = []
+    func setLoop(_ range: ClosedRange<Double>?) { loops.append(range) }
 }
 
 struct EngineParametersTests {
