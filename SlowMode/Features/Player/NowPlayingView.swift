@@ -138,6 +138,7 @@ struct NowPlayingView: View {
             Image(systemName: "chevron.down")
                 .font(.body.weight(.semibold))
                 .frame(width: 44, height: 44)
+                .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .glassEffect(.regular.interactive(), in: .circle)
@@ -193,6 +194,7 @@ struct NowPlayingView: View {
                 Image(systemName: "text.badge.plus")
                     .font(.title3)
                     .frame(width: 44, height: 44)
+                    .contentShape(.rect)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Añadir a playlist")
@@ -204,6 +206,7 @@ struct NowPlayingView: View {
                     .font(.title3)
                     .foregroundStyle(isLiked ? Palette.pink : Palette.textPrimary)
                     .frame(width: 44, height: 44)
+                    .contentShape(.rect)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Me gusta")
@@ -260,6 +263,7 @@ struct NowPlayingView: View {
                             .font(.title3)
                             .foregroundStyle(Palette.textSecondary)
                             .frame(width: 44, height: 44)
+                            .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Quitar fragmento")
@@ -290,6 +294,7 @@ struct NowPlayingView: View {
                 Image(systemName: "shuffle")
                     .foregroundStyle(player.isShuffling ? Palette.periwinkle : Palette.textPrimary)
                     .frame(width: 44, height: 44)
+                    .contentShape(.rect)
             }
             .accessibilityLabel("Aleatorio")
             .accessibilityValue(player.isShuffling ? "Activado" : "Desactivado")
@@ -302,6 +307,7 @@ struct NowPlayingView: View {
                 Image(systemName: "backward.fill")
                     .font(.title2)
                     .frame(width: 52, height: 52)
+                    .contentShape(.rect)
             }
             .accessibilityLabel("Anterior")
 
@@ -327,6 +333,7 @@ struct NowPlayingView: View {
                 Image(systemName: "forward.fill")
                     .font(.title2)
                     .frame(width: 52, height: 52)
+                    .contentShape(.rect)
             }
             .accessibilityLabel("Siguiente")
 
@@ -338,6 +345,7 @@ struct NowPlayingView: View {
                 Image(systemName: player.repeatMode == .one ? "repeat.1" : "repeat")
                     .foregroundStyle(player.repeatMode == .off ? Palette.textPrimary : Palette.periwinkle)
                     .frame(width: 44, height: 44)
+                    .contentShape(.rect)
             }
             .accessibilityLabel("Repetir")
             .accessibilityValue(player.repeatMode.accessibilityValue)
@@ -349,6 +357,7 @@ struct NowPlayingView: View {
         HStack {
             RoutePickerButton()
                 .frame(width: 44, height: 44)
+                .contentShape(.rect)
                 .accessibilityLabel("Salida de audio")
             Spacer()
             Button {
@@ -371,6 +380,7 @@ struct NowPlayingView: View {
             } label: {
                 Image(systemName: "list.bullet")
                     .frame(width: 44, height: 44)
+                    .contentShape(.rect)
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier(AccessibilityID.nowPlayingQueue)

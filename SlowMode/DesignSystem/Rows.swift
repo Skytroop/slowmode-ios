@@ -61,6 +61,7 @@ struct TrackRow: View {
     var trailing: String? = nil
     var isCurrent: Bool = false
     var image: UIImage? = nil
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize: DynamicTypeSize
     /// Forma hablada del dato de la derecha (p. ej. la duración "3 minutos 34 segundos").
     var trailingSpoken: String? = nil
 
@@ -86,14 +87,14 @@ struct TrackRow: View {
                 Text(title)
                     .textStyle(.body)
                     .foregroundStyle(isCurrent ? Palette.periwinkle : Palette.textPrimary)
-                    .lineLimit(1)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
                 HStack(spacing: 6) {
                     if let origin {
                         OriginBadge(origin: origin)
                     }
                     Text(subtitle)
                         .textStyle(.caption)
-                        .lineLimit(1)
+                        .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
                 }
             }
             Spacer(minLength: 8)
@@ -118,6 +119,7 @@ struct EntityRow: View {
     let leading: Leading
     var tag: String? = nil
     var showsChevron: Bool = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize: DynamicTypeSize
 
     enum Leading {
         case avatar(initials: String, colors: ArtworkColors)
@@ -131,10 +133,10 @@ struct EntityRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .textStyle(.body)
-                    .lineLimit(1)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
                 Text(subtitle)
                     .textStyle(.caption)
-                    .lineLimit(1)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
             }
             Spacer(minLength: 8)
             if let tag {

@@ -91,6 +91,7 @@ struct SlowModePanel: View {
                     .font(.body.weight(.semibold))
                     .rotationEffect(.degrees(isExpanded ? 180 : 0))
                     .frame(width: 44, height: 44)
+                    .contentShape(.rect)
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier(AccessibilityID.slowModeExpand)

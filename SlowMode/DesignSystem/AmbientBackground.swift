@@ -34,6 +34,9 @@ struct AmbientBackground: View {
                     blob(color(2), opacity: opacities.2, size: w * 1.03)
                         .position(x: w * 0.538, y: h * 0.929)
                         .offset(drift)
+                    if intensity == .player {
+                        theme.background.opacity(0.35)
+                    }
                 }
             }
         }

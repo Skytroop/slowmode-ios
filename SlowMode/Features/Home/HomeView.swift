@@ -90,6 +90,7 @@ private struct SongsPlayedCard: View {
                     .lineLimit(1)
                 Text("Canciones escuchadas")
                     .font(.footnote.weight(.medium))
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .foregroundStyle(Palette.ink)
         }

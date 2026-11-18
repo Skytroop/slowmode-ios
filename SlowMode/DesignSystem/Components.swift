@@ -56,10 +56,8 @@ struct Chip: View {
                 .padding(.horizontal, 16)
                 .frame(minHeight: 34)
                 .foregroundStyle(isSelected ? Palette.ink : Palette.textPrimary)
-                .glassEffect(
-                    isSelected ? Glass.regular.tint(Palette.textPrimary.opacity(0.9)).interactive() : Glass.regular.interactive(),
-                    in: .capsule
-                )
+                .background(isSelected ? Palette.textPrimary : Color.clear, in: .capsule)
+                .glassEffect(.regular.interactive(), in: .capsule)
                 .padding(.vertical, 5)
                 .contentShape(.rect)
         }
@@ -111,6 +109,7 @@ struct OLEDToggleButton: View {
                 .font(.system(.body, weight: .medium))
                 .foregroundStyle(oledBlack ? Palette.periwinkle : Palette.textPrimary)
                 .frame(width: 44, height: 44)
+                .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .glassEffect(.regular.interactive(), in: .circle)

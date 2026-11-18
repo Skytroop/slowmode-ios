@@ -95,11 +95,11 @@ private struct MixCard: View {
                 Spacer(minLength: 0)
                 Text(mix.title)
                     .font(.headline)
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text("@\(mix.creator) · \(mix.minutes) min")
                     .font(.footnote)
                     .monospacedDigit()
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .foregroundStyle(ink)
             .padding(16)
