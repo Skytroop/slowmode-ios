@@ -40,6 +40,18 @@ struct ImportOutcome: Equatable, Sendable {
         }
         return parts.joined(separator: " · ")
     }
+
+    /// Resumen + motivo de cada error + duplicados, para el aviso tras importar.
+    var details: String {
+        var lines: [String] = [summary]
+        for failure in failures {
+            lines.append("\(failure.fileName): \(failure.reason.message)")
+        }
+        if !duplicates.isEmpty {
+            lines.append("Ya estaban en tu biblioteca: " + duplicates.joined(separator: ", "))
+        }
+        return lines.joined(separator: "\n")
+    }
 }
 
 struct AudioMetadata: Sendable {

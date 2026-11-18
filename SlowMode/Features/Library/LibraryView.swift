@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import UniformTypeIdentifiers
 
 enum LibraryTile: String, CaseIterable, Identifiable {
@@ -34,6 +35,10 @@ struct LibraryView: View {
     @State private var tile: LibraryTile = .liked
     @State private var isNamingPlaylist: Bool = false
     @State private var newPlaylistName: String = ""
+    @State private var pendingOrigin: TrackOrigin?
+    @State private var importOrigin: TrackOrigin = .localFile
+    @State private var showsPicker: Bool = false
+    @State private var importResult: ImportOutcome?
 
     var body: some View {
         @Bindable var navigation = navigation
@@ -90,8 +95,53 @@ struct LibraryView: View {
             }
             Button("Cancelar", role: .cancel) {}
         }
-        .sheet(isPresented: $navigation.isImportPresented) {
-            ImportSheet()
+        .sheet(isPresented: $navigation.isImportPresented, onDismiss: openPickerIfChosen) {
+            ImportSheet { origin in pendingOrigin = origin }
+        }
+        .sheet(isPresented: $showsPicker) {
+            AudioDocumentPicker(
+                onPick: { urls in
+                    showsPicker = false
+                    runImport(urls)
+                },
+                onCancel: { showsPicker = false }
+            )
+            .ignoresSafeArea()
+        }
+        .overlay {
+            if localLibrary.isImporting {
+                ProgressView("Importando…")
+                    .padding(24)
+                    .glassEffect(.regular, in: .rect(cornerRadius: Radius.list))
+            }
+        }
+        .alert(
+            "Importación",
+            isPresented: Binding(get: { importResult != nil }, set: { if !$0 { importResult = nil } }),
+            presenting: importResult
+        ) { _ in
+            Button("Aceptar", role: .cancel) {}
+        } message: { outcome in
+            Text(outcome.details)
+        }
+    }
+
+    /// Al cerrarse la hoja de importar, abre el selector si se eligió una opción.
+    private func openPickerIfChosen() {
+        guard let origin = pendingOrigin else { return }
+        pendingOrigin = nil
+        importOrigin = origin
+        showsPicker = true
+    }
+
+    private func runImport(_ urls: [URL]) {
+        guard !urls.isEmpty else { return }
+        let origin: TrackOrigin = importOrigin
+        Task {
+            let outcome: ImportOutcome = await localLibrary.importFiles(urls, origin: origin)
+            // Las copias temporales del selector ya no hacen falta.
+            for url in urls { try? FileManager.default.removeItem(at: url) }
+            importResult = outcome
         }
     }
 
@@ -287,14 +337,11 @@ private struct LibraryTileButton: View {
     }
 }
 
-/// Hoja "Importar o subir audio": copia los archivos elegidos a la app y lee sus metadatos.
+/// Hoja "Importar o subir audio": solo elige el tipo. El selector de Archivos se abre desde
+/// Biblioteca al cerrarse esta hoja (presentarlo dentro de otra hoja impedía que se cerrara).
 struct ImportSheet: View {
-    @Environment(LocalLibrary.self) private var localLibrary: LocalLibrary
+    let onChoose: (TrackOrigin) -> Void
     @Environment(\.dismiss) private var dismiss
-    @State private var showsPicker: Bool = false
-    @State private var importOrigin: TrackOrigin = .localFile
-    @State private var outcome: ImportOutcome?
-    @State private var pickerError: String?
 
     var body: some View {
         NavigationStack {
@@ -315,74 +362,23 @@ struct ImportSheet: View {
                 } footer: {
                     Text("Las pistas se copian a la app y se quedan en este iPhone. Puedes elegir varias a la vez.")
                 }
-
-                if localLibrary.isImporting {
-                    Section {
-                        HStack(spacing: 12) {
-                            ProgressView()
-                            Text("Importando…")
-                        }
-                    }
-                }
-
-                if let outcome {
-                    Section("Resultado") {
-                        Text(outcome.summary)
-                            .textStyle(.body)
-                        ForEach(Array(outcome.failures.enumerated()), id: \.offset) { _, failure in
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(failure.fileName).textStyle(.body)
-                                Text(failure.reason.message).textStyle(.caption)
-                            }
-                        }
-                        if !outcome.duplicates.isEmpty {
-                            Text("Ya estaban en tu biblioteca: " + outcome.duplicates.joined(separator: ", "))
-                                .textStyle(.caption)
-                        }
-                    }
-                }
-
-                if let pickerError {
-                    Section {
-                        Text(pickerError).textStyle(.caption)
-                    }
-                }
             }
             .scrollContentBackground(.hidden)
             .navigationTitle("Importar o subir audio")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(outcome == nil ? "Cerrar" : "Hecho") { dismiss() }
-                        .disabled(localLibrary.isImporting)
-                }
-            }
-            .fileImporter(
-                isPresented: $showsPicker,
-                allowedContentTypes: [.audio],
-                allowsMultipleSelection: true
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    pickerError = nil
-                    let origin: TrackOrigin = importOrigin
-                    Task {
-                        outcome = await localLibrary.importFiles(urls, origin: origin)
-                    }
-                case .failure:
-                    pickerError = "No se pudo abrir el selector de archivos. Inténtalo de nuevo."
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cerrar") { dismiss() }
                 }
             }
         }
-        .presentationDetents([.medium, .large])
-        .interactiveDismissDisabled(localLibrary.isImporting)
+        .presentationDetents([.medium])
     }
 
     private func option(title: String, detail: String, symbol: String, origin: TrackOrigin) -> some View {
         Button {
-            importOrigin = origin
-            outcome = nil
-            showsPicker = true
+            onChoose(origin)
+            dismiss()
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: symbol)
@@ -400,6 +396,45 @@ struct ImportSheet: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .disabled(localLibrary.isImporting)
+    }
+}
+
+/// Selector de documentos de UIKit en modo copia: el sistema entrega copias locales
+/// (también de iCloud Drive), sin permisos de acceso temporales.
+struct AudioDocumentPicker: UIViewControllerRepresentable {
+    let onPick: ([URL]) -> Void
+    let onCancel: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onPick: onPick, onCancel: onCancel)
+    }
+
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.audio], asCopy: true)
+        picker.allowsMultipleSelection = true
+        picker.shouldShowFileExtensions = true
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+
+    @MainActor
+    final class Coordinator: NSObject, UIDocumentPickerDelegate {
+        private let onPick: ([URL]) -> Void
+        private let onCancel: () -> Void
+
+        init(onPick: @escaping ([URL]) -> Void, onCancel: @escaping () -> Void) {
+            self.onPick = onPick
+            self.onCancel = onCancel
+        }
+
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+            onPick(urls)
+        }
+
+        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            onCancel()
+        }
     }
 }

@@ -220,5 +220,7 @@ struct LocalLibraryImportTests {
         outcome.duplicates = ["c"]
         outcome.failures = [ImportFailure(fileName: "d", reason: .unsupportedFormat)]
         #expect(outcome.summary == "2 pistas importadas · 1 duplicada omitida · 1 con error")
+        #expect(outcome.details.contains("d: Formato no compatible"))
+        #expect(outcome.details.contains("Ya estaban en tu biblioteca: c"))
     }
 }
