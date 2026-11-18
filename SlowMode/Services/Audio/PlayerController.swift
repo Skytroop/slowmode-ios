@@ -48,6 +48,14 @@ final class PlayerController {
     /// Fragmento que se repite (segundos de la pista original). Se quita al cambiar de pista.
     private(set) var loopRange: ClosedRange<Double>?
     static let minimumLoopLength: Double = 1
+    /// Temporizador de apagado: hora (reloj real) a la que se pausa la reproducción.
+    private(set) var sleepDeadline: Date?
+    /// Temporizador de apagado: pausar cuando termine la pista actual.
+    private(set) var stopsAtTrackEnd: Bool = false
+    /// Opciones del temporizador, en minutos.
+    static let sleepTimerOptions: [Int] = [5, 15, 30, 45, 60]
+    /// Reloj inyectable para las pruebas.
+    @ObservationIgnored var now: () -> Date = { Date() }
 
     /// Devuelve el archivo de audio de una pista (solo las importadas tienen).
     @ObservationIgnored var fileURLProvider: (CatalogTrack) -> URL? = { _ in nil }
@@ -88,6 +96,14 @@ final class PlayerController {
 
     /// `true` si la pista actual suena de verdad (archivo importado).
     var isPlayingRealAudio: Bool { usesEngine }
+
+    var isSleepTimerActive: Bool { sleepDeadline != nil || stopsAtTrackEnd }
+
+    /// Segundos que faltan para que salte el temporizador (si es por tiempo).
+    var sleepTimerRemaining: Double? {
+        guard let sleepDeadline else { return nil }
+        return max(0, sleepDeadline.timeIntervalSince(now()))
+    }
 
     var upNext: [CatalogTrack] {
         guard let index = currentIndex else { return [] }
@@ -193,6 +209,23 @@ final class PlayerController {
         repeatMode = repeatMode.next
     }
 
+    /// Pausa la reproducción dentro de `minutes` minutos de tiempo real.
+    func setSleepTimer(minutes: Int) {
+        stopsAtTrackEnd = false
+        sleepDeadline = now().addingTimeInterval(Double(max(1, minutes)) * 60)
+    }
+
+    /// Pausa la reproducción cuando termine la pista actual.
+    func setSleepTimerAtTrackEnd() {
+        sleepDeadline = nil
+        stopsAtTrackEnd = true
+    }
+
+    func cancelSleepTimer() {
+        sleepDeadline = nil
+        stopsAtTrackEnd = false
+    }
+
     func dismissError() {
         playbackError = nil
     }
@@ -200,6 +233,11 @@ final class PlayerController {
     /// Avanza el reloj `seconds` de tiempo real. Con audio real, lee la posición del motor.
     func tick(seconds: Double) {
         guard isPlaying, let track = currentTrack else { return }
+        if let deadline = sleepDeadline, now() >= deadline {
+            sleepDeadline = nil
+            setPlaying(false)
+            return
+        }
         listeningObserver(ListeningTick(
             sessionID: sessionID,
             trackID: track.id,
@@ -246,6 +284,18 @@ final class PlayerController {
     }
 
     private func handleTrackEnd() {
+        if stopsAtTrackEnd {
+            stopsAtTrackEnd = false
+            setPlaying(false)
+            if let index = currentIndex, index < queue.count - 1 {
+                // Deja la siguiente preparada (en pausa) para continuar más tarde.
+                load(queue[index + 1])
+            } else {
+                position = duration
+            }
+            updateNowPlaying()
+            return
+        }
         if repeatMode == .one {
             seek(to: 0)
             return
@@ -284,6 +334,8 @@ final class PlayerController {
     }
 
     private func setPlaying(_ playing: Bool) {
+        // Si el plazo venció mientras estaba en pausa, el temporizador ya no aplica.
+        if playing, let deadline = sleepDeadline, now() >= deadline { sleepDeadline = nil }
         if usesEngine, let engine {
             if playing {
                 do {

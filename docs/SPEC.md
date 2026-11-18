@@ -75,7 +75,7 @@ Opción en Ajustes (y botón de luna en Inicio), guardada con `@AppStorage("oled
 
 ### 3.7 Reproduciendo (pantalla completa)
 De arriba abajo:
-1. Bajar (cerrar) · "Reproduciendo desde [Artista]".
+1. Bajar (cerrar) · "Reproduciendo desde [Artista]" · **Temporizador de apagado** (luna, menú: 5/15/30/45/60 min o "Al terminar la pista", y "Desactivar"). Activo: icono en periwinkle y cuenta atrás bajo "Reproduciendo desde". Al vencer pausa la reproducción; el tiempo corre en reloj real, también en segundo plano.
 2. Portada grande (~300 pt; se encoge a ~168 pt al abrir el panel de Slow Mode).
 3. Título, subtítulo (artista · "Archivo local" / "Original subido" / "Daycore de @creador"), botón **Añadir a playlist** y **corazón**. Si Slow Mode cambia algo, una pill con el resumen (`0.85× · −2 st`).
 4. Barra de progreso con tiempos. Con Slow Mode activo los tiempos reflejan la duración estirada (3:34 a 0.85× → 4:12).

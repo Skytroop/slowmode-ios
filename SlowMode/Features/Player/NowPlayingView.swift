@@ -157,12 +157,74 @@ struct NowPlayingView: View {
                 Text(player.sourceTitle)
                     .font(.footnote.weight(.semibold))
                     .lineLimit(1)
+                if player.isSleepTimerActive {
+                    // Se refresca cada segundo aunque la música esté en pausa.
+                    TimelineView(.periodic(from: .now, by: 1)) { _ in
+                        if let status = sleepTimerStatus {
+                            Label(status, systemImage: "moon.zzz.fill")
+                                .font(.caption)
+                                .monospacedDigit()
+                                .foregroundStyle(Palette.periwinkle)
+                                .lineLimit(1)
+                        }
+                    }
+                }
             }
             .accessibilityElement(children: .combine)
             Spacer()
-            Color.clear.frame(width: 44, height: 44)
+            sleepTimerButton
         }
         .padding(.top, 8)
+    }
+
+    /// "12:30" o "Al terminar la pista" mientras el temporizador está activo.
+    private var sleepTimerStatus: String? {
+        if let remaining = player.sleepTimerRemaining {
+            return SlowModeFormat.duration(remaining)
+        }
+        return player.stopsAtTrackEnd ? "Al terminar la pista" : nil
+    }
+
+    private var sleepTimerSpokenValue: String {
+        if let remaining = player.sleepTimerRemaining {
+            return "Se detiene en \(SlowModeFormat.spokenDuration(remaining))"
+        }
+        return player.stopsAtTrackEnd ? "Se detiene al terminar la pista" : "Desactivado"
+    }
+
+    /// Temporizador de apagado: pausa la música tras un tiempo o al terminar la pista.
+    private var sleepTimerButton: some View {
+        Menu {
+            Section("Detener la música") {
+                ForEach(PlayerController.sleepTimerOptions, id: \.self) { minutes in
+                    Button("\(minutes) minutos") {
+                        player.setSleepTimer(minutes: minutes)
+                        showToast("Se detendrá en \(minutes) minutos")
+                    }
+                }
+                Button("Al terminar la pista") {
+                    player.setSleepTimerAtTrackEnd()
+                    showToast("Se detendrá al terminar la pista")
+                }
+            }
+            if player.isSleepTimerActive {
+                Button("Desactivar temporizador", systemImage: "xmark", role: .destructive) {
+                    player.cancelSleepTimer()
+                    showToast("Temporizador desactivado")
+                }
+            }
+        } label: {
+            Image(systemName: player.isSleepTimerActive ? "moon.zzz.fill" : "moon.zzz")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(player.isSleepTimerActive ? Palette.periwinkle : Palette.textPrimary)
+                .frame(width: 44, height: 44)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .circle)
+        .accessibilityIdentifier(AccessibilityID.nowPlayingSleepTimer)
+        .accessibilityLabel("Temporizador de apagado")
+        .accessibilityValue(sleepTimerSpokenValue)
     }
 
     private func subtitle(for track: CatalogTrack) -> String {

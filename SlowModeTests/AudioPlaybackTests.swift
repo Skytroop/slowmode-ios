@@ -136,6 +136,68 @@ struct PlayerEngineTests {
 }
 
 @MainActor
+struct SleepTimerTests {
+    private let first = CatalogTrack(id: "local-1", artistId: "x", title: "Una", artist: "Yo", album: "", duration: 100, plays: 0, origin: .localFile)
+    private let second = CatalogTrack(id: "local-2", artistId: "x", title: "Dos", artist: "Yo", album: "", duration: 50, plays: 0, origin: .localFile)
+
+    @Test func pausesWhenDeadlinePasses() {
+        let player = PlayerController()
+        var clock: Date = Date(timeIntervalSince1970: 1_000)
+        player.now = { clock }
+        player.play(first, in: [first], from: "Ejemplo")
+        player.setSleepTimer(minutes: 15)
+        #expect(player.sleepTimerRemaining == 900)
+        clock = clock.addingTimeInterval(899)
+        player.tick(seconds: 0.25)
+        #expect(player.isPlaying)
+        clock = clock.addingTimeInterval(1)
+        player.tick(seconds: 0.25)
+        #expect(!player.isPlaying)
+        #expect(!player.isSleepTimerActive)
+    }
+
+    @Test func expiredTimerIsClearedOnResume() {
+        let player = PlayerController()
+        var clock: Date = Date(timeIntervalSince1970: 1_000)
+        player.now = { clock }
+        player.play(first, in: [first], from: "Ejemplo")
+        player.setSleepTimer(minutes: 5)
+        player.pause()
+        clock = clock.addingTimeInterval(600)
+        player.resume()
+        #expect(player.isPlaying)
+        #expect(!player.isSleepTimerActive)
+        player.tick(seconds: 0.25)
+        #expect(player.isPlaying)
+        player.pause()
+    }
+
+    @Test func stopsAtTrackEndAndPreparesNext() {
+        let engine = FakeEngine()
+        let player = PlayerController(engine: engine)
+        player.fileURLProvider = { _ in URL(fileURLWithPath: "/tmp/a.m4a") }
+        player.play(first, in: [first, second], from: "Tu música")
+        player.setSleepTimerAtTrackEnd()
+        engine.onFinished?()
+        #expect(!player.isPlaying)
+        #expect(player.currentTrack?.id == "local-2")
+        #expect(engine.playCount == 1)
+        #expect(!player.isSleepTimerActive)
+    }
+
+    @Test func choosingOneModeReplacesTheOther() {
+        let player = PlayerController()
+        player.setSleepTimerAtTrackEnd()
+        player.setSleepTimer(minutes: 30)
+        #expect(!player.stopsAtTrackEnd)
+        player.setSleepTimerAtTrackEnd()
+        #expect(player.sleepDeadline == nil)
+        player.cancelSleepTimer()
+        #expect(!player.isSleepTimerActive)
+    }
+}
+
+@MainActor
 struct LocalLibraryImportTests {
     private func makeLibrary() throws -> (LocalLibrary, ModelContainer, URL) {
         let container = try TestData.makeContainer()

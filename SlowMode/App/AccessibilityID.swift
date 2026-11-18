@@ -23,6 +23,7 @@ enum AccessibilityID {
     static let nowPlayingProgress: String = "player_now_playing_progress_slider"
     static let nowPlayingLoop: String = "player_now_playing_loop_button"
     static let nowPlayingQueue: String = "player_now_playing_queue_button"
+    static let nowPlayingSleepTimer: String = "player_now_playing_sleep_timer_button"
     static let slowModeToggle: String = "player_slow_mode_toggle"
     static let slowModeExpand: String = "player_slow_mode_expand_button"
     static let slowModeSave: String = "player_slow_mode_save_button"
