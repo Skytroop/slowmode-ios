@@ -38,7 +38,6 @@ struct LibraryView: View {
     @State private var newPlaylistName: String = ""
     @State private var pendingOrigin: TrackOrigin?
     @State private var importOrigin: TrackOrigin = .localFile
-    @State private var showsPicker: Bool = false
     @State private var importResult: ImportOutcome?
     @State private var pendingDuplicates: ImportOutcome?
 
@@ -101,16 +100,6 @@ struct LibraryView: View {
         .sheet(isPresented: $navigation.isImportPresented, onDismiss: openPickerIfChosen) {
             ImportSheet { origin in pendingOrigin = origin }
         }
-        .sheet(isPresented: $showsPicker) {
-            AudioDocumentPicker(
-                onPick: { urls in
-                    showsPicker = false
-                    runImport(urls)
-                },
-                onCancel: { showsPicker = false }
-            )
-            .ignoresSafeArea()
-        }
         .overlay {
             if localLibrary.isImporting {
                 ProgressView("Importando…")
@@ -146,7 +135,7 @@ struct LibraryView: View {
         guard let origin = pendingOrigin else { return }
         pendingOrigin = nil
         importOrigin = origin
-        showsPicker = true
+        AudioFilePicker.shared.present { urls in runImport(urls) }
     }
 
     private func runImport(_ urls: [URL]) {
@@ -458,42 +447,52 @@ struct ImportSheet: View {
     }
 }
 
-/// Selector de documentos de UIKit en modo copia: el sistema entrega copias locales
-/// (también de iCloud Drive), sin permisos de acceso temporales.
-struct AudioDocumentPicker: UIViewControllerRepresentable {
-    let onPick: ([URL]) -> Void
-    let onCancel: () -> Void
+/// Selector de documentos de UIKit en modo copia (el sistema entrega copias locales, también de iCloud Drive).
+/// Se presenta directamente con UIKit sobre la pantalla visible: envolverlo en una hoja de SwiftUI hacía que,
+/// al cerrarse solo tras elegir, SwiftUI creyera que seguía abierta y bloqueara otras presentaciones
+/// (por ejemplo, abrir Reproduciendo).
+@MainActor
+final class AudioFilePicker: NSObject, UIDocumentPickerDelegate {
+    static let shared: AudioFilePicker = AudioFilePicker()
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onPick: onPick, onCancel: onCancel)
-    }
+    private var completion: (([URL]) -> Void)?
 
-    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+    /// Abre el selector. `completion` recibe los archivos elegidos (vacío si se cancela).
+    func present(completion: @escaping ([URL]) -> Void) {
+        guard let presenter = Self.topViewController() else {
+            completion([])
+            return
+        }
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.audio], asCopy: true)
         picker.allowsMultipleSelection = true
         picker.shouldShowFileExtensions = true
-        picker.delegate = context.coordinator
-        return picker
+        picker.delegate = self
+        self.completion = completion
+        presenter.present(picker, animated: true)
     }
 
-    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+    func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
+        finish(urls)
+    }
 
-    @MainActor
-    final class Coordinator: NSObject, UIDocumentPickerDelegate {
-        private let onPick: ([URL]) -> Void
-        private let onCancel: () -> Void
+    func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+        finish([])
+    }
 
-        init(onPick: @escaping ([URL]) -> Void, onCancel: @escaping () -> Void) {
-            self.onPick = onPick
-            self.onCancel = onCancel
+    private func finish(_ urls: [URL]) {
+        let callback = completion
+        completion = nil
+        callback?(urls)
+    }
+
+    private static func topViewController() -> UIViewController? {
+        let scenes: [UIWindowScene] = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let windows: [UIWindow] = scenes.flatMap(\.windows)
+        let window: UIWindow? = windows.first(where: \.isKeyWindow) ?? windows.first
+        var top: UIViewController? = window?.rootViewController
+        while let presented = top?.presentedViewController, !presented.isBeingDismissed {
+            top = presented
         }
-
-        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            onPick(urls)
-        }
-
-        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-            onCancel()
-        }
+        return top
     }
 }
