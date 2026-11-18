@@ -146,7 +146,6 @@ struct SlowModePanel: View {
                         }
                     }
                 }
-                .scrollClipDisabled()
 
                 Text(SlowModeFormat.stretchSentence(duration: trackDuration, tempo: player.slow.tempo))
                     .textStyle(.caption)
